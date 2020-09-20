@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+
 def R2(y_data, y_model):
     return 1 - np.sum((y_data - y_model)**2) / np.sum((y_data - np.mean(y_data))**2)
 
@@ -55,3 +56,15 @@ def train_test(X_data, y_data, debug = False):
     bias = get_bias(y_data, beta_optimal)
     return beta, beta_optimal, r2_error, mse_error, variance_beta, bias
 
+def train_test_bootstrap(X_train_data, y_train_data, trials, debug = False):
+    r2_error_avg = np.zeros(trials); mse_error_avg = np.zeros(trials); variance_beta_avg = np.zeros(trials); bias_avg = np.zeros(trials); 
+
+    for sample in range(trials):
+        X_data, y_data = resample(X_train_data, y_train_data)            
+        beta_train, beta_optimal_train, r2_error_avg[sample], mse_error_avg[sample], variance_beta_avg[sample], bias_avg[sample] = train_test(X_data, y_data)
+
+    return np.mean(r2_error_avg[sample]), np.mean(mse_error_avg[sample]), np.mean(variance_beta_avg[sample]), np.mean(bias_avg[sample])
+
+def resample(X_train_data, y_train_data):
+    # TODO: Implement resampling
+    return X_train_data, y_train_data

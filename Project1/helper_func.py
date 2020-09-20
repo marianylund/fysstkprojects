@@ -3,6 +3,9 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from time import time
+from numpy.random import randint
+from scipy.stats import norm
 
 # Credit to Jon Dahl and Michael
 from numba import jit
@@ -65,4 +68,35 @@ def plot_test_train(polydegree, values_to_plot, debug = False):
             print(val, values_to_plot[val])
         plt.plot(polydegree, values_to_plot[val], label=val)
     plt.legend()
+    plt.show()
+
+
+
+
+def bootstrap(data, statistic, R, analysis = False):
+    t = np.zeros(R); n = len(data); inds = np.arange(n); t0 = time()
+    # non-parametric bootstrap         
+    for i in range(R):
+        t[i] = statistic(data[randint(0,n,n)])
+
+    if analysis:   
+        print("Runtime: %g sec" % (time()-t0)); print("Bootstrap Statistics :")
+        print("original           bias      std. error")
+        print("%8g %8g %14g %15g" % (statistic(data), np.std(data), np.mean(t), np.std(t)))
+    return t
+
+def test_bootstrap(X):
+    stat = lambda data: np.mean(data)
+    t = bootstrap(X, stat, 100)
+    # the histogram of the bootstrapped  data                                                                                                    
+    n, binsboot, patches = plt.hist(t, 50, normed=1, facecolor='red', alpha=0.75)
+
+    # add a 'best fit' line  
+    y = norm.pdf( binsboot, np.mean(t), np.std(t))
+    lt = plt.plot(binsboot, y, 'r--', linewidth=1)
+    plt.xlabel('Smarts')
+    plt.ylabel('Probability')
+    #plt.axis([99.5, 100.6, 0, 3.0])
+    plt.grid(True)
+
     plt.show()
