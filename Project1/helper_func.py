@@ -6,6 +6,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from time import time
 from numpy.random import randint
 from scipy.stats import norm
+import warnings
+warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
 
 # Credit to Jon Dahl and Michael
 from numba import jit
