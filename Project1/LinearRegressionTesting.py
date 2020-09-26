@@ -1,10 +1,12 @@
 from RegressionModel import RegressionModel
 from SamplingData import SamplingData
 from helper_func import *
+from BootstrapSampling import BootstrapSampling
+from CrossValidationKFold import CrossValidationKFold
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold,cross_val_score, cross_val_predict, cross_validate
 from sklearn.preprocessing import StandardScaler
 
 import numpy as np
@@ -76,6 +78,7 @@ def test_Standard_Scaler():
     assert (diff < error_tolerance), assert_msg
 
 def test_OLS_with_sklearn():
+    print("Testing OLS compared to sklearn")
     X, z = create_test_data()
     X_train, X_test, Y_train, Y_test = train_test_split(X, z, test_size = 0.2)
     scaler = StandardScaler()
@@ -97,10 +100,37 @@ def test_OLS_with_sklearn():
     assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance)
     assert diff < error_tolerance, assert_msg
 
+def test_bootstrap_sampling():
+    print("Testing Bootstrap Sampling")
+    X, z = create_test_data()
+    boot = BootstrapSampling(X, z, RegressionModel())
+    boot.fit()
+    print("r2 score: ", boot.model.r2)
+
+def test_k_fold_with_sklearn():
+    k = 5
+    X, z = create_test_data()
+
+    X_train, X_test, y_train, y_test = train_test_split(X, z, test_size=0.2, shuffle=False)
+    lm = LinearRegression()
+    model = lm.fit(X_train, y_train)
+
+    kfold = KFold(n_splits = k, shuffle = False)
+    prediction_scores = cross_validate(model, X, z, cv=kfold, scoring=('neg_mean_squared_error'), return_train_score=True)
+    print("Cross-validated train_score per fold from sklearn:", np.mean(-prediction_scores['train_score']))
+    print("Cross-validated test_score per fold from sklearn:", np.mean(-prediction_scores['test_score']))
+
+    kfold_sampling = CrossValidationKFold(X, z, RegressionModel(), k)
+    kfold_sampling.fit()
+
+    print("Error score(mse): ", kfold_sampling.model.mse)
+
 if __name__ == "__main__":
     test_true()
     test_false()
     #test_Standard_Scaler()
-    test_OLS_with_sklearn()
+    #test_OLS_with_sklearn()
+    #test_bootstrap_sampling()
+    test_k_fold_with_sklearn()
 
     print("Everything passed")

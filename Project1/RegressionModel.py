@@ -1,8 +1,13 @@
 import numpy as np
 
-class RegressionModel:
+class RegressionModel(object):
     def __init__(self, debug = False):
         self.debug = debug
+
+    def train_and_test(self):
+        self.find_beta()
+        self.find_optimal_beta()
+        self.test_model()
 
     def set_data(self, X_train, X_test, y_train, y_test):
         self.X_train = X_train
