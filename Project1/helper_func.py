@@ -6,6 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from time import time
 from numpy.random import randint
 from scipy.stats import norm
+from imageio import imread
 import warnings
 warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
 
@@ -36,7 +37,27 @@ def FrankeFunction(x,y, noise_strength = 0.0):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4 + np.random.normal(0, 1, size=x.shape[0]) * noise_strength
 
-def plot_3d_franke(x, y, z):
+def create_frankie_data(seed = 3155, N = 20, noise_strength = 0.1):
+    np.random.seed(seed)
+
+    x, y = create_mesh(N, random_mesh = True, seed = seed)
+    z_franke = FrankeFunction(x, y, noise_strength)
+    z = np.ravel(z_franke)
+    return x, y, z
+
+def create_terrain_data(N = 1000, path = 'DataFiles/SRTM_data_Norway_2.tif'):
+    terrain = imread(path)
+    terrain = terrain[:N,:N]
+    # Creates mesh of image pixels
+    x = np.linspace(0,1, np.shape(terrain)[0])
+    y = np.linspace(0,1, np.shape(terrain)[1])
+    x_mesh, y_mesh = np.meshgrid(x,y)
+
+    z = terrain
+    return x_mesh, y_mesh, z
+
+
+def plot_3d_franke(x, y, z, set_limit = True):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     # Plot the surface.
@@ -44,7 +65,8 @@ def plot_3d_franke(x, y, z):
                         linewidth=0, antialiased=False)
 
     # Customize the z axis.
-    ax.set_zlim(-0.10, 1.40)
+    if set_limit:
+        ax.set_zlim(-0.10, 1.40)
     ax.zaxis.set_major_locator(LinearLocator(10))
     ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
 

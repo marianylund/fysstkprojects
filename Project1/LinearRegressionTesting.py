@@ -129,8 +129,8 @@ if __name__ == "__main__":
     test_true()
     test_false()
     #test_Standard_Scaler()
-    #test_OLS_with_sklearn()
+    test_OLS_with_sklearn()
     #test_bootstrap_sampling()
-    test_k_fold_with_sklearn()
+    #test_k_fold_with_sklearn()
 
     print("Everything passed")

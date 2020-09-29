@@ -1,5 +1,6 @@
 import numpy as np
 from SamplingData import SamplingData
+from RegressionModel import ModelResults
 
 class BootstrapSampling(SamplingData):
 
@@ -10,22 +11,30 @@ class BootstrapSampling(SamplingData):
     
     def fit(self):
         self.split_and_scale_train_test()
-        self.train_test_bootstrap()
+        return self.train_test_bootstrap()
 
     def train_test_bootstrap(self):
-        r2_error_avg = np.zeros(self.trials); mse_error_avg = np.zeros(self.trials); variance_beta_avg = np.zeros(self.trials); bias_avg = np.zeros(self.trials); 
+        bootstrap_train_results = ModelResults(self.trials)
+        bootstrap_test_results = ModelResults(self.trials)
+
         original_X_train_data = self.model.X_train
         original_y_train_data = self.model.y_train
+
         for sample in range(self.trials):
             self.model.X_train, self.model.y_train = self.resample(original_X_train_data, original_y_train_data)
             self.model.find_beta()
             self.model.find_optimal_beta()
-            self.model.test_model()          
-            r2_error_avg[sample] = self.model.r2; mse_error_avg[sample] = self.model.mse; variance_beta_avg[sample] = self.model.variance_beta; bias_avg[sample] = self.model.bias
+            self.model.test_model()
+
+            bootstrap_train_results.set_results(self.model.train_results, sample)
+            bootstrap_train_results.set_results(self.model.test_results, sample)
+
+        bootstrap_train_results.average_out_results()
+        bootstrap_test_results.average_out_results()
 
         self.model.X_train = original_X_train_data
         self.model.y_train = original_y_train_data
-        self.model.r2 = np.mean(r2_error_avg); self.model.mse = np.mean(mse_error_avg); self.model.variance_beta = np.mean(variance_beta_avg); self.model.bias = np.mean(bias_avg)
+        return bootstrap_train_results, bootstrap_test_results
 
     def resample(self, X_train_data, y_train_data):
         assert(X_train_data.shape[0] == y_train_data.shape[0], "X_train and y_train are not the same length")
