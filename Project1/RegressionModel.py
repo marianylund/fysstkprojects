@@ -27,6 +27,7 @@ class RegressionModel(object):
         self.y_test = y_test
 
     def find_optimal_beta(self):
+        # TODO: prediction, not beta optimal
         self.test_results.beta_optimal = self.X_test @ self.beta
         self.train_results.beta_optimal = self.X_train @ self.beta
     
@@ -52,9 +53,8 @@ class RegressionModel(object):
         U, s, V = np.linalg.svd(self.X_train, full_matrices = False) # goddamn magic
 
         lambda_inverse = np.diag(1/(s**2 + self.alpha))
-        #print(V.shape, lambda_inverse.shape, s.shape, U.T.shape, y_train.shape)
-        #print(lambda_inverse)
-        self.beta = V @ lambda_inverse @ s @ U.T @ self.y_train
+        #print("V: ", V.shape, ", Lambda-1: ", lambda_inverse.shape, ", s: ", np.diag(s).shape, ", U.T: ", U.T.shape, ", y_train: ", self.y_train.shape)
+        self.beta = V @ lambda_inverse @ np.diag(s) @ U.T @ self.y_train
 
     def find_beta_Lasso(self):
         # TODO: should fit_intercept be false or true?

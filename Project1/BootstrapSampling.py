@@ -7,6 +7,7 @@ class BootstrapSampling(SamplingData):
     def __init__(self, X, y, model, trials = 10, sample_count = 100):
         super(BootstrapSampling, self).__init__(X, y, model)
         self.trials = trials
+        assert sample_count >= X.shape[1], "Cannot fit matrix with " + str(X.shape[1]) + " deg of freedom, with just " + str(sample_count) + " samples"
         self.sample_count = sample_count
     
     def fit(self):
@@ -27,7 +28,7 @@ class BootstrapSampling(SamplingData):
             self.model.test_model()
 
             bootstrap_train_results.set_results(self.model.train_results, sample)
-            bootstrap_train_results.set_results(self.model.test_results, sample)
+            bootstrap_test_results.set_results(self.model.test_results, sample)
 
         bootstrap_train_results.average_out_results()
         bootstrap_test_results.average_out_results()

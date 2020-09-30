@@ -1,10 +1,10 @@
-from RegressionModel import RegressionModel
+from RegressionModel import RegressionModel, ModelType
 from SamplingData import SamplingData
 from helper_func import *
 from BootstrapSampling import BootstrapSampling
 from CrossValidationKFold import CrossValidationKFold
 
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split, KFold,cross_val_score, cross_val_predict, cross_validate
 from sklearn.preprocessing import StandardScaler
@@ -22,15 +22,12 @@ def test_false():
 
 def create_test_data():
     seed = 3155
-    np.random.seed(seed)
 
     N = 20
     noise_strength = 0.1
     p = 2 
 
-    x, y = create_mesh(N, random_mesh = True, seed = seed)
-    z_franke = FrankeFunction(x, y, noise_strength)
-    z = np.ravel(z_franke)
+    x, y, z = create_frankie_data(seed, N, noise_strength)
     X = create_X(x, y, p)
     return X, z
 
@@ -77,27 +74,58 @@ def test_Standard_Scaler():
     assert_msg = "\nDifference between means " + str(diff) + " should be less than " + str(error_tolerance) + ".Sampling: " + str(np.mean(sampling.model.X_train)) + " model: " + str(np.mean(skl_X_train))
     assert (diff < error_tolerance), assert_msg
 
-def test_OLS_with_sklearn():
-    print("Testing OLS compared to sklearn")
-    X, z = create_test_data()
-    X_train, X_test, Y_train, Y_test = train_test_split(X, z, test_size = 0.2)
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+def test_r2_with_sklearn():
+    print("Testing r2 compared to sklearn r2 method")
 
-    lin_model = LinearRegression(fit_intercept=True).fit(X_train, Y_train)
-    y_test_predict = lin_model.predict(X_test)
-    sklearn_score = r2_score(Y_test, y_test_predict)
+    X, z = create_test_data()
 
     model = RegressionModel()
     sampling = SamplingData(X, z, model)
     sampling.fit()
 
-    sklearn_score_on_red_model = r2_score(Y_test, sampling.model.beta_optimal)
-    print("Same r2 func: ", sklearn_score, sklearn_score_on_red_model, " our error: ", sampling.model.r2)
-    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling.model.r2))
+    sampling_model_r2 = sampling.model.test_results.r2
+    sklearn_score_on_red_model = r2_score(sampling.model.y_test, sampling.model.test_results.beta_optimal)
+    diff = np.abs(np.abs(sklearn_score_on_red_model) - np.abs(sampling_model_r2))
+    assert_msg = "\nDifference between r2 scores methods" + str(diff) + " should be less than " + str(error_tolerance)
+    assert diff < error_tolerance, assert_msg
+
+def test_OLS_with_sklearn():
+    print("Testing OLS compared to sklearn")
+
+    X, z = create_test_data()
+
+    model = RegressionModel()
+    sampling = SamplingData(X, z, model)
+    sampling.fit()
+
+    # Use the same scaled data, to test just the OLS method
+    lin_model = LinearRegression(fit_intercept=False).fit(sampling.model.X_train, sampling.model.y_train)
+    y_test_predict = lin_model.predict(sampling.model.X_test)
+    sklearn_score = r2_score(sampling.model.y_test, y_test_predict)    
+
+    sampling_model_r2 = sampling.model.test_results.r2
+
+    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling_model_r2))
     assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance)
+    assert diff < error_tolerance, assert_msg
+
+def test_ridge_with_sklearn():
+    print("Testing Ridge compared to sklearn")
+
+    ridge_lambda = 1.0
+    X, z = create_test_data()
+
+    model = RegressionModel(model_type=ModelType.Ridge, alpha = ridge_lambda)
+    sampling = SamplingData(X, z, model)
+    sampling.fit()
+    sampling_model_r2 = sampling.model.test_results.r2
+
+    lin_model = Ridge(alpha = ridge_lambda, fit_intercept=False).fit(sampling.model.X_train, sampling.model.y_train)
+    y_test_predict = lin_model.predict(sampling.model.X_test)
+    sklearn_score = r2_score(sampling.model.y_test, y_test_predict)
+
+    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling_model_r2))
+    assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance) + ", sklearn: " + str(sklearn_score) + ", our model: " + str(sampling_model_r2)
     assert diff < error_tolerance, assert_msg
 
 def test_bootstrap_sampling():
@@ -129,7 +157,9 @@ if __name__ == "__main__":
     test_true()
     test_false()
     #test_Standard_Scaler()
-    test_OLS_with_sklearn()
+    #test_r2_with_sklearn()
+    test_ridge_with_sklearn()
+    #test_OLS_with_sklearn()
     #test_bootstrap_sampling()
     #test_k_fold_with_sklearn()
 
