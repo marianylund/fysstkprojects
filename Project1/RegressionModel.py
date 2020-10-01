@@ -54,7 +54,7 @@ class RegressionModel(object):
 
         lambda_inverse = np.diag(1/(s**2 + self.alpha))
         #print("V: ", V.shape, ", Lambda-1: ", lambda_inverse.shape, ", s: ", np.diag(s).shape, ", U.T: ", U.T.shape, ", y_train: ", self.y_train.shape)
-        self.beta = V @ lambda_inverse @ np.diag(s) @ U.T @ self.y_train
+        self.beta = V.T @ lambda_inverse @ np.diag(s) @ U.T @ self.y_train
 
     def find_beta_Lasso(self):
         # TODO: should fit_intercept be false or true?
