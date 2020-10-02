@@ -1,8 +1,8 @@
 import numpy as np
-from SamplingData import SamplingData
-from RegressionModel import ModelResults
+from SamplingMethod import SamplingMethod
+from RegressionMethod import RegressionResults
 
-class BootstrapSampling(SamplingData):
+class BootstrapSampling(SamplingMethod):
 
     def __init__(self, X, y, model, trials = 10, sample_count = 100):
         super(BootstrapSampling, self).__init__(X, y, model)
@@ -15,8 +15,8 @@ class BootstrapSampling(SamplingData):
         return self.train_test_bootstrap()
 
     def train_test_bootstrap(self):
-        bootstrap_train_results = ModelResults(self.trials)
-        bootstrap_test_results = ModelResults(self.trials)
+        bootstrap_train_results = RegressionResults(self.trials)
+        bootstrap_test_results = RegressionResults(self.trials)
 
         original_X_train_data = self.model.X_train
         original_y_train_data = self.model.y_train

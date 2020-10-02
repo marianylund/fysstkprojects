@@ -1,8 +1,8 @@
 import numpy as np
-from SamplingData import SamplingData
-from RegressionModel import ModelResults
+from SamplingMethod import SamplingMethod
+from RegressionMethod import RegressionResults
 
-class CrossValidationKFold(SamplingData):
+class CrossValidationKFold(SamplingMethod):
 
     def __init__(self, X, y, model, kfolds = 5):
         super(CrossValidationKFold, self).__init__(X, y, model)
@@ -19,12 +19,12 @@ class CrossValidationKFold(SamplingData):
         X_fold_indices = np.reshape(X_fold_indices, (self.kfolds, -1))
         k_indices = [x for x in range(self.kfolds)]
 
-        cross_validation_train_results = ModelResults(self.kfolds)
-        cross_validation_test_results = ModelResults(self.kfolds)
+        cross_validation_train_results = RegressionResults(self.kfolds)
+        cross_validation_test_results = RegressionResults(self.kfolds)
 
         for fold in range(self.kfolds):
             X_indices = X_fold_indices[np.delete(k_indices, fold)].reshape(-1)
-            X_train, X_test = SamplingData.scale_standard(self.X[X_indices], self.X[X_fold_indices[fold]])
+            X_train, X_test = SamplingMethod.scale_standard(self.X[X_indices], self.X[X_fold_indices[fold]])
             self.model.set_data(X_train, X_test, self.y[X_indices], self.y[X_fold_indices[fold]])
             
             self.model.train_and_test()
