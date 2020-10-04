@@ -38,13 +38,13 @@ class RegressionResults():
             self.mse = self.MSE(y_data, self.beta_optimal)
             self.variance_beta = np.var(self.beta_optimal)
             self.bias = self.get_bias(y_data, self.beta_optimal)**2
-            #print('{} >= {} + {} = {}'.format(self.mse, self.bias, self.variance_beta, self.bias+self.variance_beta))
+            assert self.mse >= (self.bias + self.variance_beta), ('[{}] {} >= {} + {} = {}'.format(index, self.mse, self.bias, self.variance_beta, self.bias+self.variance_beta))
         else:
             self.r2_avg[index] = self.R2(y_data, self.beta_optimal)
             self.mse_avg[index] = self.MSE(y_data, self.beta_optimal)
             self.variance_beta_avg[index] = np.var(self.beta_optimal)
             self.bias_avg[index] = self.get_bias(y_data, self.beta_optimal)**2
-            #print('{} >= {} + {} = {}'.format(self.mse_avg[index], self.bias_avg[index], self.variance_beta_avg[index], self.bias_avg[index]+self.variance_beta_avg[index]))
+            assert self.mse_avg[index] >= (self.bias_avg[index] + self.variance_beta_avg[index]), ('[{}] {} >= {} + {} = {}'.format(index, self.mse_avg[index], self.bias_avg[index], self.variance_beta_avg[index], self.bias_avg[index]+self.variance_beta_avg[index]))
 
 
     def get(self):

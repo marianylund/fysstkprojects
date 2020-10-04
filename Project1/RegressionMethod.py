@@ -10,11 +10,11 @@ class RegressionType(enum.Enum):
    Lasso = 2
 
 class RegressionMethod(object):
-    def __init__(self, model_type = RegressionType.OLS, alpha = 0.0):
+    def __init__(self, model_type = RegressionType.OLS, avg_num = 0, alpha = 0.0):
         self.model_type = model_type
         self.alpha = alpha
-        self.test_results = RegressionResults()
-        self.train_results = RegressionResults()
+        self.test_results = RegressionResults(avg_num)
+        self.train_results = RegressionResults(avg_num)
 
     def train_and_test(self):
         self.find_beta()
@@ -32,9 +32,9 @@ class RegressionMethod(object):
         self.test_results.beta_optimal = self.X_test @ self.beta
         self.train_results.beta_optimal = self.X_train @ self.beta
     
-    def test_model(self):
-        self.test_results.test_data(self.y_test)
-        self.train_results.test_data(self.y_train)
+    def test_model(self, index = -1):
+        self.test_results.test_data(self.y_test, index)
+        self.train_results.test_data(self.y_train, index)
 
     def find_beta(self):
         if self.model_type == RegressionType.OLS:
@@ -58,7 +58,6 @@ class RegressionMethod(object):
         self.beta = V.T @ lambda_inverse @ np.diag(s) @ U.T @ self.y_train
 
     def find_beta_Lasso(self):
-        # TODO: should fit_intercept be false or true?
         clf = Lasso(alpha = self.alpha, fit_intercept=False, normalize=False, max_iter=10000, tol=0.006).fit(self.X_train, self.y_train)
         self.beta = clf.coef_
 

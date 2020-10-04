@@ -15,8 +15,6 @@ class BootstrapSampling(SamplingMethod):
         return self.train_test_bootstrap()
 
     def train_test_bootstrap(self):
-        bootstrap_train_results = RegressionResults(self.trials)
-        bootstrap_test_results = RegressionResults(self.trials)
 
         original_X_train_data = self.model.X_train
         original_y_train_data = self.model.y_train
@@ -25,17 +23,14 @@ class BootstrapSampling(SamplingMethod):
             self.model.X_train, self.model.y_train = self.resample(original_X_train_data, original_y_train_data)
             self.model.find_beta()
             self.model.find_optimal_beta()
-            self.model.test_model()
+            self.model.test_model(sample)
 
-            bootstrap_train_results.set_results(self.model.train_results, sample)
-            bootstrap_test_results.set_results(self.model.test_results, sample)
-
-        bootstrap_train_results.average_out_results()
-        bootstrap_test_results.average_out_results()
+        self.model.test_results.average_out_results()
+        self.model.train_results.average_out_results()
 
         self.model.X_train = original_X_train_data
         self.model.y_train = original_y_train_data
-        return bootstrap_train_results, bootstrap_test_results
+        return self.model.train_results, self.model.test_results
 
     def resample(self, X_train_data, y_train_data):
         assert(X_train_data.shape[0] == y_train_data.shape[0], "X_train and y_train are not the same length")

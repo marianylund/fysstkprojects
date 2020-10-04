@@ -7,6 +7,8 @@ from time import time
 from numpy.random import randint
 from scipy.stats import norm
 from imageio import imread
+import seaborn as sns
+import os, sys
 import warnings
 warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
 
@@ -29,6 +31,15 @@ def create_X(x, y, n, debug = False):
     if debug:
         print("X.shape: ", X.shape)
     return X
+
+def image_path(fig_id, FIGURE_ID = "Results/FigureFiles"):
+    return os.path.join(FIGURE_ID, fig_id)
+
+def data_path(dat_id, DATA_ID = "DataFiles/"):
+    return os.path.join(DATA_ID, dat_id)
+
+def save_figure(fig_id, FIGURE_ID = "Results/FigureFiles"):
+    plt.savefig(image_path(fig_id, FIGURE_ID) + ".png", format='png', bbox_inches = 'tight')
 
 def FrankeFunction(x,y, noise_strength = 0.0):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -57,22 +68,55 @@ def create_terrain_data(N = 1000, path = 'DataFiles/SRTM_data_Norway_2.tif'):
     return x_mesh, y_mesh, z
 
 
-def plot_3d_graph(x, y, z, title, set_limit = True, save_fig = False):
-    fig = plt.figure()
+def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f', z_line_ticks = 10, view_azim = -35, set_limit = True, save_fig = False):
+    fig = plt.figure(dpi=dpi)
     ax = fig.gca(projection='3d')
     # Plot the surface.
-    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm,
+    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm, 
                         linewidth=0, antialiased=False)
-
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel(z_title)
     # Customize the z axis.
     if set_limit:
         ax.set_zlim(-0.10, 1.40)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-    ax.set_title(title)
+    ax.zaxis.set_major_locator(LinearLocator(z_line_ticks))
+    ax.zaxis.set_major_formatter(FormatStrFormatter(formatter))
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5)
+    ax.view_init(elev=40., azim=view_azim)
+    plt.subplots_adjust(top = 1.4, right=1.4)
+    plt.title(title, loc='left', fontsize=22, fontweight=1)
+    if save_fig:
+        save_figure(title)
+    plt.show()
 
+def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title = "Confidence Intervals of beta", save_fig = False):
+    sns.set_style("whitegrid")
+    cov = np.var(z)*np.linalg.pinv(X.T @ X)
+    std_beta = np.sqrt(np.diag(cov))
+    CI = percentile*std_beta
+
+    plt.errorbar(range(len(beta)), beta, CI, fmt='.k', elinewidth=1, capsize=3, label=r'$\beta_j \pm ' + str(percentile) + ' \sigma$')
+    plt.legend()
+    plt.xlabel(r'index $j$')
+    plt.ylabel(r'$\beta_j$')
+    plt.figtext(0.1, -0.1, "Noise Strength: " + str(noise_strength) + "\nNumber of samples: " + str(N), ha="left", fontsize=7)
+    if save_fig:
+        save_figure(title + str(N) + str(noise_strength))
+    plt.show()
+
+def plot_test_train_model_complexity(polydegree, values_to_plot, N = -1, trials = -1, sample_count = -1, noise_strength = 0.1, save_fig = False):
+    plt.style.use('seaborn-darkgrid')
+    plt.plot(polydegree, values_to_plot["Train"], label="Train sample")
+    plt.plot(polydegree, values_to_plot["Test"], label="Test sample")
+    plt.xlabel("Polynomial Degree")
+    plt.ylabel("Prediction Error")
+    plt.legend()
+    if(N != -1 and trials != -1 and sample_count != -1):
+        plt.figtext(0.1, -0.1, "Noise Strength: " + str(noise_strength) + "\nNumber of samples: " + str(N) + "\nTrials: " + str(trials) + "\nBoostrap samples: " + str(sample_count), ha="left", fontsize=7)
+    if save_fig:
+        save_figure("TestTrainErrorAsModelComplexity" + str(N) + str(trials) + str(sample_count) + str(noise_strength).replace(".", ""))
     plt.show()
 
 def create_mesh(n, random_mesh = False, seed = None):
@@ -93,8 +137,6 @@ def plot_test_train(polydegree, values_to_plot, debug = False):
         plt.plot(polydegree, values_to_plot[val], label=val)
     plt.legend()
     plt.show()
-
-
 
 
 def bootstrap(data, statistic, R, analysis = False):
