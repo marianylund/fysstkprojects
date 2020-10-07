@@ -18,9 +18,14 @@ class BootstrapSampling(SamplingMethod):
 
         original_X_train_data = self.model.X_train
         original_y_train_data = self.model.y_train
+        original_X_test_data = self.model.X_test
+        original_y_test_data = self.model.y_test
 
         for sample in range(self.trials):
             self.model.X_train, self.model.y_train = self.resample(original_X_train_data, original_y_train_data)
+            self.model.X_test = original_X_test_data
+            self.model.y_test = original_y_test_data
+            
             self.model.find_beta()
             self.model.find_optimal_beta()
             self.model.test_model(sample)

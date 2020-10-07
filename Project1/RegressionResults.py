@@ -36,14 +36,16 @@ class RegressionResults():
         if index == -1:
             self.r2 = self.R2(y_data, self.beta_optimal)
             self.mse = self.MSE(y_data, self.beta_optimal)
-            self.variance_beta = np.var(self.beta_optimal)
-            self.bias = self.get_bias(y_data, self.beta_optimal)**2
+            # Get variance between points of diff models, not betweeen points themselves
+            # They are supposed to be the same
+            self.variance_beta = 0
+            self.bias = self.get_bias(y_data, self.beta_optimal)
             assert self.mse >= (self.bias + self.variance_beta), ('[{}] {} >= {} + {} = {}'.format(index, self.mse, self.bias, self.variance_beta, self.bias+self.variance_beta))
         else:
             self.r2_avg[index] = self.R2(y_data, self.beta_optimal)
             self.mse_avg[index] = self.MSE(y_data, self.beta_optimal)
             self.variance_beta_avg[index] = np.var(self.beta_optimal)
-            self.bias_avg[index] = self.get_bias(y_data, self.beta_optimal)**2
+            self.bias_avg[index] = self.get_bias(y_data, self.beta_optimal)
             assert self.mse_avg[index] >= (self.bias_avg[index] + self.variance_beta_avg[index]), ('[{}] {} >= {} + {} = {}'.format(index, self.mse_avg[index], self.bias_avg[index], self.variance_beta_avg[index], self.bias_avg[index]+self.variance_beta_avg[index]))
 
 
@@ -59,9 +61,8 @@ class RegressionResults():
 
     @staticmethod
     def MSE(y_data, y_model):
-        n = np.size(y_model)
-        return np.sum((y_data - y_model)**2)/n
+        return np.mean((y_data - y_model)**2)
 
     @staticmethod
     def get_bias(y_data, y_model):
-        return np.mean(y_data - np.mean(y_model)**2)
+        return np.mean((y_data - np.mean(y_model, axis=1, keepdims=True))**2)

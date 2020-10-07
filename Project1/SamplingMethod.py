@@ -19,7 +19,9 @@ class SamplingMethod:
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=test_size, shuffle=shuffle)
         if normalize:
             X_train, X_test = SamplingMethod.scale_standard(X_train, X_test)
-
+        # Force the correct shape:
+        y_test.shape = (y_test.shape[0], 1)
+        y_train.shape = (y_train.shape[0], 1)
         self.model.set_data(X_train, X_test, y_train, y_test)
     
     def __repr__(self):
