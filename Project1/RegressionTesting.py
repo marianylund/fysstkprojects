@@ -1,9 +1,8 @@
 from RegressionMethod import RegressionMethod, RegressionType
-from RegressionResults import RegressionResults
 from SamplingMethod import SamplingMethod
 from HelperFunctions import create_frankie_data, create_X
 from BootstrapSampling import BootstrapSampling
-from CrossValidationKFold import CrossValidationKFold
+#from CrossValidationKFold import CrossValidationKFold
 
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_squared_error, r2_score
@@ -26,7 +25,7 @@ def create_test_data():
 
     N = 20
     noise_strength = 0.1
-    p = 2 
+    p = 5 
 
     x, y, z = create_frankie_data(seed, N, noise_strength)
     X = create_X(x, y, p)
@@ -46,10 +45,9 @@ def create_simple_test_data():
 
     return X, y
 
-def test_mean_and_std_of_scaled_data():
+def test_mean_and_std_of_scaled_data(X, z):
     print("Testing mean and std of scaled data")
 
-    X, z = create_test_data()
     X_train, X_test, Y_train, Y_test = train_test_split(X, z, test_size = 0.2)
     train_data_scaled, test_data_scaled = SamplingMethod.scale_standard(X_train, X_test)
 
@@ -58,110 +56,119 @@ def test_mean_and_std_of_scaled_data():
     assert(np.isclose(np.mean(test_data_scaled), 0, atol = 1e-15, equal_nan=True), np.mean(test_data_scaled))
     assert(np.isclose(np.std(test_data_scaled), 1, atol = 1e-15, equal_nan=True), np.std(test_data_scaled))
 
-def test_Standard_Scaler():
+def test_Standard_Scaler(X, z):
     print("Testing Standard Scaler")
-    X, z = create_test_data()
     X_train, X_test, Y_train, Y_test = train_test_split(X, z, test_size = 0.2)
     scaler = StandardScaler()
     scaler.fit(X_train)
     skl_X_train = scaler.transform(X_train)
     skl_X_test = scaler.transform(X_test)
 
-    model = RegressionMethod()
-    sampling = SamplingMethod(X, z, model)
-    sampling.split_and_scale_train_test()
+    sampling = SamplingMethod()
+    sampling.split_and_scale_train_test(X, z)
 
-    diff = np.abs(np.abs(np.mean(sampling.model.X_train)) - np.abs(np.mean(skl_X_train)))
-    assert_msg = "\nDifference between means " + str(diff) + " should be less than " + str(error_tolerance) + ".Sampling: " + str(np.mean(sampling.model.X_train)) + " model: " + str(np.mean(skl_X_train))
+    diff = np.abs(np.abs(np.mean(sampling.X_train)) - np.abs(np.mean(skl_X_train)))
+    assert_msg = "\nDifference between means " + str(diff) + " should be less than " + str(error_tolerance) + ".Sampling: " + str(np.mean(sampling.X_train)) + " model: " + str(np.mean(skl_X_train))
     assert (diff < error_tolerance), assert_msg
 
-def test_r2_with_sklearn():
+def test_r2_with_sklearn(X, z):
     print("Testing r2 compared to sklearn r2 method")
 
-    X, z = create_test_data()
+    sampling = SamplingMethod().train_and_test(X, z)
 
-    model = RegressionMethod()
-    sampling = SamplingMethod(X, z, model)
-    sampling.fit()
-
-    sampling_model_r2 = sampling.model.test_results.r2
-    sklearn_score_on_red_model = r2_score(sampling.model.y_test, sampling.model.test_results.beta_optimal)
-    diff = np.abs(np.abs(sklearn_score_on_red_model) - np.abs(sampling_model_r2))
+    sklearn_score_on_red_model = r2_score(sampling.y_test, sampling.model.get_y_pred(sampling.X_test))
+    diff = np.abs(np.abs(sklearn_score_on_red_model) - np.abs(sampling.r2))
     assert_msg = "\nDifference between r2 scores methods" + str(diff) + " should be less than " + str(error_tolerance)
     assert diff < error_tolerance, assert_msg
 
-def test_OLS_with_sklearn():
+def test_mse_with_sklearn(X, z):
+    print("Testing MSE compared to sklearn MSE method")
+
+    sampling = SamplingMethod().train_and_test(X, z)
+
+    sklearn_mse = mean_squared_error(sampling.y_test, sampling.model.get_y_pred(sampling.X_test))
+    diff = np.abs(np.abs(sklearn_mse) - np.abs(sampling.mse))
+    assert_msg = "\nDifference between MSE scores methods" + str(diff) + " should be less than " + str(error_tolerance) + ".Sampling: " + str(sampling.mse) + " model: " + str(sklearn_mse)
+    assert diff < error_tolerance, assert_msg
+
+def test_OLS_with_sklearn(X, z):
     print("Testing OLS compared to sklearn")
 
-    X, z = create_test_data()
-
-    model = RegressionMethod()
-    sampling = SamplingMethod(X, z, model)
-    sampling.fit()
+    sampling = SamplingMethod().train_and_test(X, z, model_type = RegressionType.OLS)
 
     # Use the same scaled data, to test just the OLS method
-    lin_model = LinearRegression(fit_intercept=False).fit(sampling.model.X_train, sampling.model.y_train)
-    y_test_predict = lin_model.predict(sampling.model.X_test)
-    sklearn_score = r2_score(sampling.model.y_test, y_test_predict)    
+    lin_model = LinearRegression(fit_intercept=False).fit(sampling.X_train, sampling.y_train)
+    y_test_predict = lin_model.predict(sampling.X_test)
+    sklearn_score = r2_score(sampling.y_test, y_test_predict)    
 
-    sampling_model_r2 = sampling.model.test_results.r2
-
-    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling_model_r2))
+    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling.r2))
     assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance)
     assert diff < error_tolerance, assert_msg
 
-def test_ridge_with_sklearn():
+def test_OLS_train_MSE_with_sklearn(X, z):
+    print("Testing OLS compared to sklearn")
+
+    sampling = SamplingMethod().train_and_test(X, z, model_type = RegressionType.OLS)
+    sampling_score = sampling.test_model(sampling.model, sampling.X_train, sampling.y_train).mse
+
+    # Use the same scaled data, to test just the OLS method
+    lin_model = LinearRegression(fit_intercept=False).fit(sampling.X_train, sampling.y_train)
+    sklearn_y_train_predict = lin_model.predict(sampling.X_train)
+    sklearn_score = mean_squared_error(sampling.y_train, sklearn_y_train_predict)    
+
+    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling_score))
+    assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance)+ ".Sampling: " + str(sampling_score) + " model: " + str(sklearn_score)
+    assert diff < error_tolerance, assert_msg
+
+def test_ridge_with_sklearn(X, z):
     print("Testing Ridge compared to sklearn")
 
     ridge_lambda = 1.0
-    X, z = create_test_data()
+    sampling = SamplingMethod().train_and_test(X, z, model_type = RegressionType.Ridge, alpha = ridge_lambda)
 
-    model = RegressionMethod(model_type=RegressionType.Ridge, alpha = ridge_lambda)
-    sampling = SamplingMethod(X, z, model)
-    sampling.fit()
-    sampling_model_r2 = sampling.model.test_results.r2
+    lin_model = Ridge(alpha = ridge_lambda, fit_intercept=False).fit(sampling.X_train, sampling.y_train)
+    y_test_predict = lin_model.predict(sampling.X_test)
+    sklearn_score = r2_score(sampling.y_test, y_test_predict)
 
-    lin_model = Ridge(alpha = ridge_lambda, fit_intercept=False).fit(sampling.model.X_train, sampling.model.y_train)
-    y_test_predict = lin_model.predict(sampling.model.X_test)
-    sklearn_score = r2_score(sampling.model.y_test, y_test_predict)
-
-    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling_model_r2))
-    assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance) + ", sklearn: " + str(sklearn_score) + ", our model: " + str(sampling_model_r2)
+    diff = np.abs(np.abs(sklearn_score) - np.abs(sampling.r2))
+    assert_msg = "\nDifference between r2 scores " + str(diff) + " should be less than " + str(error_tolerance) + ", sklearn: " + str(sklearn_score) + ", our model: " + str(sampling.r2)
     assert diff < error_tolerance, assert_msg
 
-def test_bootstrap_sampling():
+def test_bootstrap_sampling(X, z):
     print("Testing Bootstrap Sampling")
-    X, z = create_test_data()
-    boot = BootstrapSampling(X, z, RegressionMethod())
-    boot.fit()
-    print("r2 score: ", boot.model.r2)
+    
+    boot = BootstrapSampling().train_and_test(X, z)
+    print("r2 score: ", boot.r2)
 
-def test_k_fold_with_sklearn():
-    k = 5
-    X, z = create_test_data()
+# def test_k_fold_with_sklearn():
+#     k = 5
+#     X, z = create_test_data()
 
-    X_train, X_test, y_train, y_test = train_test_split(X, z, test_size=0.2, shuffle=False)
-    lm = LinearRegression()
-    model = lm.fit(X_train, y_train)
+#     X_train, X_test, y_train, y_test = train_test_split(X, z, test_size=0.2, shuffle=False)
+#     lm = LinearRegression()
+#     model = lm.fit(X_train, y_train)
 
-    kfold = KFold(n_splits = k, shuffle = False)
-    prediction_scores = cross_validate(model, X, z, cv=kfold, scoring=('neg_mean_squared_error'), return_train_score=True)
-    print("Cross-validated train_score per fold from sklearn:", np.mean(-prediction_scores['train_score']))
-    print("Cross-validated test_score per fold from sklearn:", np.mean(-prediction_scores['test_score']))
+#     kfold = KFold(n_splits = k, shuffle = False)
+#     prediction_scores = cross_validate(model, X, z, cv=kfold, scoring=('neg_mean_squared_error'), return_train_score=True)
+#     print("Cross-validated train_score per fold from sklearn:", np.mean(-prediction_scores['train_score']))
+#     print("Cross-validated test_score per fold from sklearn:", np.mean(-prediction_scores['test_score']))
 
-    kfold_sampling = CrossValidationKFold(X, z, RegressionMethod(), k)
-    kfold_sampling.fit()
+#     kfold_sampling = CrossValidationKFold(X, z, RegressionMethod(), k)
+#     kfold_sampling.fit()
 
-    print("Error score(mse): ", kfold_sampling.model.mse)
+#     print("Error score(mse): ", kfold_sampling.model.mse)
 
 if __name__ == "__main__":
     test_true()
     test_false()
+    X, z = create_test_data()
     #test_Standard_Scaler()
-    #test_r2_with_sklearn()
-    test_ridge_with_sklearn()
-    #test_OLS_with_sklearn()
-    #test_bootstrap_sampling()
-    #test_k_fold_with_sklearn()
+    # test_r2_with_sklearn(X, z)
+    # test_ridge_with_sklearn(X, z)
+    # test_OLS_with_sklearn(X, z)
+    # test_bootstrap_sampling(X, z)
+    #test_mse_with_sklearn(X, z)
+    test_OLS_train_MSE_with_sklearn(X, z)
+    #test_k_fold_with_sklearn(X, z)
 
     print("Everything passed")

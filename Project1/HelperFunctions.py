@@ -64,8 +64,9 @@ def create_terrain_data(N = 1000, path = 'DataFiles/SRTM_data_Norway_2.tif'):
     y = np.linspace(0,1, np.shape(terrain)[1])
     x_mesh, y_mesh = np.meshgrid(x,y)
 
-    z = terrain
-    return x_mesh, y_mesh, z
+    predictors_input = np.c_[x_mesh.ravel(), y_mesh.ravel()]
+    z = terrain.ravel()
+    return x_mesh, y_mesh, z, predictors_input
 
 
 def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f', z_line_ticks = 10, view_azim = -35, set_limit = True, save_fig = False):

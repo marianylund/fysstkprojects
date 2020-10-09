@@ -16,14 +16,22 @@ class BootstrapSampling(SamplingMethod):
 
     def train_test_bootstrap(self, X_train, X_test, y_train, y_test, model_type = RegressionType.OLS, alpha = 0.0):
         y_pred = np.empty((y_test.shape[0], self.trials))
+        y_pred_train = np.empty((y_train.shape[0], self.trials))
         for sample in range(self.trials):
             resampled_X_train, resampled_y_train = self.__resample(X_train, y_train)
-            y_pred[:, sample] = RegressionMethod().fit(resampled_X_train, resampled_y_train, model_type, alpha).get_prediction(X_test).ravel()
+            model = RegressionMethod().fit(resampled_X_train, resampled_y_train, model_type, alpha)
+            y_pred[:, sample] = model.get_y_pred(X_test).ravel()
+            y_pred_train[:, sample] = model.get_y_pred(X_train).ravel()
 
         self.r2 = self.R2(y_test, y_pred)
         self.mse = self.MSE(y_test, y_pred)
         self.bias = self.get_bias(y_test, y_pred)
         self.var = self.get_variance(y_pred)
+
+        self.r2_train = self.R2(y_train, y_pred_train)
+        self.mse_train = self.MSE(y_train, y_pred_train)
+        self.bias_train = self.get_bias(y_train, y_pred_train)
+        self.var_train = self.get_variance(y_pred_train)
 
         return self
 

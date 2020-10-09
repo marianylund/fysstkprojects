@@ -21,10 +21,11 @@ class RegressionMethod(object):
             return self.__find_beta_Lasso(X_train, y_train)
         else:
             print("Something went wrong, no model type is sat")
+            return self
 
     def __find_beta_OLS(self, X_train, y_train):
-        self.beta = np.linalg.pinv(X_train) @ y_train
-        #self.beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ y_train
+        #self.beta = np.linalg.pinv(X_train) @ y_train
+        self.beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ y_train
         return self
     
     def __find_beta_Ridge(self, X_train, y_train):
