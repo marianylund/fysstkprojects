@@ -1,44 +1,51 @@
 import numpy as np
 from SamplingMethod import SamplingMethod
-from RegressionMethod import RegressionResults
+from RegressionMethod import RegressionMethod, RegressionType
 
 class BootstrapSampling(SamplingMethod):
 
-    def __init__(self, X, y, model, trials = 10, sample_count = 100):
-        super(BootstrapSampling, self).__init__(X, y, model)
+    def __init__(self, trials = 10, sample_count = 100):
         self.trials = trials
-        assert sample_count >= X.shape[1], "Cannot fit matrix with " + str(X.shape[1]) + " deg of freedom, with just " + str(sample_count) + " samples"
         self.sample_count = sample_count
     
-    def fit(self):
-        self.split_and_scale_train_test()
-        return self.train_test_bootstrap()
+    def train_and_test(self, X, y, model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
+        #assert sample_count >= X.shape[1], "Cannot fit matrix with " + str(X.shape[1]) + " deg of freedom, with just " + str(sample_count) + " samples"
+        self.split_and_scale_train_test(X, y, test_size, shuffle, normalize)
+        self.train_test_bootstrap(self.X_train, self.X_test, self.y_train, self.y_test, model_type = RegressionType.OLS, alpha = 0.0)
+        return self
 
-    def train_test_bootstrap(self):
-
-        original_X_train_data = self.model.X_train
-        original_y_train_data = self.model.y_train
-        original_X_test_data = self.model.X_test
-        original_y_test_data = self.model.y_test
-
+    def train_test_bootstrap(self, X_train, X_test, y_train, y_test, model_type = RegressionType.OLS, alpha = 0.0):
+        y_pred = np.empty((y_test.shape[0], self.trials))
         for sample in range(self.trials):
-            self.model.X_train, self.model.y_train = self.resample(original_X_train_data, original_y_train_data)
-            self.model.X_test = original_X_test_data
-            self.model.y_test = original_y_test_data
-            
-            self.model.find_beta()
-            self.model.find_optimal_beta()
-            self.model.test_model(sample)
+            resampled_X_train, resampled_y_train = self.__resample(X_train, y_train)
+            y_pred[:, sample] = RegressionMethod().fit(resampled_X_train, resampled_y_train, model_type, alpha).get_prediction(X_test).ravel()
 
-        self.model.test_results.average_out_results()
-        self.model.train_results.average_out_results()
+        self.r2 = self.R2(y_test, y_pred)
+        self.mse = self.MSE(y_test, y_pred)
+        self.bias = self.get_bias(y_test, y_pred)
+        self.var = self.get_variance(y_pred)
 
-        self.model.X_train = original_X_train_data
-        self.model.y_train = original_y_train_data
-        return self.model.train_results, self.model.test_results
+        return self
 
-    def resample(self, X_train_data, y_train_data):
-        assert(X_train_data.shape[0] == y_train_data.shape[0], "X_train and y_train are not the same length")
+    def __resample(self, X_train_data, y_train_data):
+        #assert(X_train_data.shape[0] == y_train_data.shape[0], "X_train and y_train are not the same length")
         indices = [x for x in range(len(X_train_data))]
         sampled_indices = np.random.choice(indices, self.sample_count, replace=True)
         return X_train_data[sampled_indices], y_train_data[sampled_indices]
+
+
+    @staticmethod
+    def get_variance(y_pred):
+        return np.mean( np.var(y_pred, axis=1, keepdims=True) )
+
+    @staticmethod
+    def R2(y_data, y_pred):
+        return 1 - np.sum((y_data - y_pred)**2) / np.sum((y_data - np.mean(y_data))**2)
+
+    @staticmethod
+    def MSE(y_data, y_pred):
+        return np.mean(np.mean((y_data - y_pred)**2, axis=1, keepdims=True))
+
+    @staticmethod
+    def get_bias(y_data, y_pred):
+        return np.mean((y_data - np.mean(y_pred, axis=1, keepdims=True))**2)
