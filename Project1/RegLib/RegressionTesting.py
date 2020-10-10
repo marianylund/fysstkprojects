@@ -1,7 +1,7 @@
-from RegressionMethod import RegressionMethod, RegressionType
-from SamplingMethod import SamplingMethod
-from HelperFunctions import create_frankie_data, create_X
-from BootstrapSampling import BootstrapSampling
+from RegLib.RegressionMethod import RegressionMethod, RegressionType
+from RegLib.SamplingMethod import SamplingMethod
+from RegLib.HelperFunctions import create_frankie_data, create_X
+from RegLib.BootstrapSampling import BootstrapSampling
 #from CrossValidationKFold import CrossValidationKFold
 
 from sklearn.linear_model import LinearRegression, Ridge
@@ -140,23 +140,6 @@ def test_bootstrap_sampling(X, z):
     boot = BootstrapSampling().train_and_test(X, z)
     print("r2 score: ", boot.r2)
 
-# def test_k_fold_with_sklearn():
-#     k = 5
-#     X, z = create_test_data()
-
-#     X_train, X_test, y_train, y_test = train_test_split(X, z, test_size=0.2, shuffle=False)
-#     lm = LinearRegression()
-#     model = lm.fit(X_train, y_train)
-
-#     kfold = KFold(n_splits = k, shuffle = False)
-#     prediction_scores = cross_validate(model, X, z, cv=kfold, scoring=('neg_mean_squared_error'), return_train_score=True)
-#     print("Cross-validated train_score per fold from sklearn:", np.mean(-prediction_scores['train_score']))
-#     print("Cross-validated test_score per fold from sklearn:", np.mean(-prediction_scores['test_score']))
-
-#     kfold_sampling = CrossValidationKFold(X, z, RegressionMethod(), k)
-#     kfold_sampling.fit()
-
-#     print("Error score(mse): ", kfold_sampling.model.mse)
 
 if __name__ == "__main__":
     test_true()
@@ -169,6 +152,5 @@ if __name__ == "__main__":
     # test_bootstrap_sampling(X, z)
     #test_mse_with_sklearn(X, z)
     test_OLS_train_MSE_with_sklearn(X, z)
-    #test_k_fold_with_sklearn(X, z)
 
     print("Everything passed")

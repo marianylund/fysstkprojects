@@ -23,6 +23,9 @@ class RegressionMethod(object):
             print("Something went wrong, no model type is sat")
             return self
 
+    def get_y_pred(self, X_data):
+        return X_data @ self.beta
+
     def __find_beta_OLS(self, X_train, y_train):
         #self.beta = np.linalg.pinv(X_train) @ y_train
         self.beta = np.linalg.pinv(X_train.T @ X_train) @ X_train.T @ y_train
@@ -30,9 +33,8 @@ class RegressionMethod(object):
     
     def __find_beta_Ridge(self, X_train, y_train):
         U, s, V = np.linalg.svd(X_train, full_matrices = False)
-
         lambda_inverse = np.diag(1/(s**2 + self.alpha))
-        #print("V: ", V.shape, ", Lambda-1: ", lambda_inverse.shape, ", s: ", np.diag(s).shape, ", U.T: ", U.T.shape, ", y_train: ", y_train.shape)
+
         self.beta = V.T @ lambda_inverse @ np.diag(s) @ U.T @ y_train
         return self
 
@@ -41,8 +43,4 @@ class RegressionMethod(object):
         self.beta = clf.coef_
         return self
 
-    def get_y_pred(self, X_data):
-        return X_data @ self.beta
 
-    def __repr__(self):
-        return ', '.join("%s: %s" % item for item in vars(self).items())

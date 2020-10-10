@@ -94,9 +94,10 @@ def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f',
         save_figure(title)
     else: 
         plt.show()
+
     plt.cla()
 
-def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title = "Confidence Intervals of beta", save_fig = False):
+def confidence_interval(X, z, beta, noise_strength, N, info_to_add = {}, percentile = 1.95, title = "Confidence Intervals of beta", save_fig = False):
     sns.set_style("whitegrid")
     cov = np.var(z)*np.linalg.pinv(X.T @ X)
     std_beta = np.sqrt(np.diag(cov))
@@ -106,11 +107,19 @@ def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title 
     plt.legend()
     plt.xlabel(r'index $j$')
     plt.ylabel(r'$\beta_j$')
-    plt.figtext(0.1, -0.1, "Noise Strength: " + str(noise_strength) + "\nNumber of samples: " + str(N), ha="left", fontsize=7)
+
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    info_str, title_info = parse_info_for_plot(info_to_add)
+    
+    if info_str != "":
+        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
+
     if save_fig:
-        save_figure(title + str(N) + str(noise_strength))
-    else: 
+        save_figure(title + title_info)
+    else:
         plt.show()
+        print(info_str)
     plt.cla()
 
 def parse_info_for_plot(info_to_add):
@@ -144,6 +153,8 @@ def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsM
         save_figure(title + title_info)
     else:
         plt.show()
+        print(info_str)
+
     plt.cla()
 
 def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTradeoff",  xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = {}, xscale = "linear",  save_fig = False):
@@ -170,6 +181,8 @@ def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTrad
         save_figure(title + title_info)
     else:
         plt.show()
+        print(info_str)
+
     plt.cla()
 
 def mupltiple_line_plot(polydegree, values_to_plot, plot_labels, subtitle, info_to_add = {}, xlabel = "Polynomial degree", ylabel = "Prediction Error", ylim = [0, 100], xscale = "linear", save_fig = False):
@@ -218,6 +231,8 @@ def mupltiple_line_plot(polydegree, values_to_plot, plot_labels, subtitle, info_
         save_figure(subtitle + title_info)
     else:
         plt.show()
+        print(info_str)
+
     plt.cla()
 
 def create_mesh(n, random_mesh = False, seed = None):

@@ -48,48 +48,48 @@ plot_values_with_info(polydegree, values_to_plot, title = "b)TestTrainErrorAsMod
 
 # Bias-variance trade-off
 
-# N = 50
-# noise = 0.1
-# p = 5
-# trials = 10000
-# sample_count = N
-# x, y, z = create_frankie_data(SEED, N,  noise_strength=noise)
-# perm_index = np.random.permutation(len(z))
+N = 50
+noise = 0.1
+p = 5
+trials = 10000
+sample_count = N
+x, y, z = create_frankie_data(SEED, N,  noise_strength=noise)
+perm_index = np.random.permutation(len(z))
 
-# polydegree = np.zeros(p); r2_boot = np.zeros(p); mse_boot = np.zeros(p); bias_boot = np.zeros(p); var_boot = np.zeros(p)
-# r2_boot_train = np.zeros(p); mse_boot_train = np.zeros(p); bias_boot_train = np.zeros(p); var_boot_train = np.zeros(p)
+polydegree = np.zeros(p); r2_boot = np.zeros(p); mse_boot = np.zeros(p); bias_boot = np.zeros(p); var_boot = np.zeros(p)
+r2_boot_train = np.zeros(p); mse_boot_train = np.zeros(p); bias_boot_train = np.zeros(p); var_boot_train = np.zeros(p)
 
-# for degree in range(p):
-#     progressBar(degree + 1, p)
+for degree in range(p):
+    progressBar(degree + 1, p)
 
-#     polydegree[degree] = degree + 1
+    polydegree[degree] = degree + 1
 
-#     X = create_X(x, y, degree, debug = False)
-#     boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
+    X = create_X(x, y, degree, debug = False)
+    boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
 
-#     r2_boot[degree] = boot.r2; mse_boot[degree] = boot.mse; bias_boot[degree] = boot.bias; var_boot[degree] = boot.var; 
-#     r2_boot_train[degree] = boot.r2_train; mse_boot_train[degree] = boot.mse_train; bias_boot_train[degree] = boot.bias_train; var_boot_train[degree] = boot.var_train; 
+    r2_boot[degree] = boot.r2; mse_boot[degree] = boot.mse; bias_boot[degree] = boot.bias; var_boot[degree] = boot.var; 
+    r2_boot_train[degree] = boot.r2_train; mse_boot_train[degree] = boot.mse_train; bias_boot_train[degree] = boot.bias_train; var_boot_train[degree] = boot.var_train; 
 
 
-# values_to_plot = {
-#     "Variance": var_boot,
-#     "MSE": mse_boot,
-#     "Bias^2": bias_boot,
-# }
+values_to_plot = {
+    "Variance": var_boot,
+    "MSE": mse_boot,
+    "Bias^2": bias_boot,
+}
 
-# info_to_add = {
-#     "N: ": N,
-#     "Noise: ": noise,
-#     "Trials: ": trials,
+info_to_add = {
+    "N: ": N,
+    "Noise: ": noise,
+    "Trials: ": trials,
 
-# }
+}
 
-# plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTradeoff", info_to_add = info_to_add, save_fig = True)
+plot_bias_variance_analysis(polydegree, values_to_plot, title = "b)BiasVarTradeoff", info_to_add = info_to_add, save_fig = True)
 
-# values_to_plot = {
-#     "Train error": mse_boot_train,
-#     "Test error": mse_boot,
-# }
+values_to_plot = {
+    "Train error": mse_boot_train,
+    "Test error": mse_boot,
+}
 
-# plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorBootstrap", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=False)
+plot_values_with_info(polydegree, values_to_plot, title = "b)TestTrainErrorBootstrap", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=SAVE_FIG)
 
