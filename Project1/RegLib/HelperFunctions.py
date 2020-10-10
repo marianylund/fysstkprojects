@@ -115,10 +115,14 @@ def parse_info_for_plot(info_to_add):
         title_info += str(info_to_add[i]).replace(".", "")
     return info_str, title_info
 
-def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsModelComplexity", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = {}, save_fig = False):
+def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsModelComplexity", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = {}, xscale = "linear", save_fig = False, scatter = False):
     plt.style.use('seaborn-darkgrid')
-    for val in values_to_plot:
-        plt.plot(polydegree, values_to_plot[val], label=val)
+    if scatter:
+        for val in values_to_plot:
+            plt.plot(polydegree, values_to_plot[val], 'o', label=val)
+    else:
+        for val in values_to_plot:
+            plt.plot(polydegree, values_to_plot[val], label=val)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
@@ -128,12 +132,15 @@ def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsM
     if info_str != "":
         plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
 
+    plt.xscale(xscale)
+
     if save_fig:
         save_figure(title + title_info)
     else:
         plt.show()
+    plt.cla()
 
-def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTradeoff", info_to_add = {}, save_fig = False):
+def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTradeoff",  xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = {}, xscale = "linear",  save_fig = False):
     plt.style.use('seaborn-darkgrid')
     y1 = values_to_plot["Variance"]
     y2 = values_to_plot["Bias^2"]
@@ -141,15 +148,17 @@ def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTrad
     labels = ["Variance", "Bias^2"]
     fig, ax = plt.subplots()
 
-    plt.xlabel("Polynomial Degree")
-    plt.ylabel("Prediction Error")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     ax.stackplot(polydegree, y1, y2, labels=labels)
     ax.plot(polydegree, values_to_plot["MSE"], color="black", label = "MSE")
     ax.legend(loc='upper right')
+    plt.xscale(xscale)
     
     info_str, title_info = parse_info_for_plot(info_to_add)
     if info_str != "":
         plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
+
 
     if save_fig:
         save_figure(title + title_info)
