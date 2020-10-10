@@ -4,4 +4,4 @@ DATA_ID = "DataFiles/"
 TERRAIN_PATH = 'DataFiles/SRTM_data_Norway_2.tif'
 
 SEED = 2018
-SAVE_FIG = False
+SAVE_FIG = True

@@ -10,6 +10,8 @@ from imageio import imread
 import seaborn as sns
 import os, sys
 import warnings
+from scipy.signal import savgol_filter
+
 warnings.filterwarnings("ignore", message="Numba")
 
 # Credit to Jon Dahl and Michael
@@ -64,10 +66,10 @@ def create_terrain_data(N = 1000, path = 'DataFiles/SRTM_data_Norway_2.tif'):
     y = np.linspace(0,1, np.shape(terrain)[1])
     x_mesh, y_mesh = np.meshgrid(x,y)
 
-    predictors_input = np.c_[x_mesh.ravel(), y_mesh.ravel()]
+    terrain = savgol_filter(terrain, 77, 2)
     z = terrain.ravel()
-    return x_mesh, y_mesh, z, predictors_input
 
+    return x_mesh, y_mesh, z
 
 def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f', z_line_ticks = 10, view_azim = -35, set_limit = True, save_fig = False):
     fig = plt.figure(dpi=dpi)
@@ -107,7 +109,8 @@ def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title 
     plt.figtext(0.1, -0.1, "Noise Strength: " + str(noise_strength) + "\nNumber of samples: " + str(N), ha="left", fontsize=7)
     if save_fig:
         save_figure(title + str(N) + str(noise_strength))
-    plt.show()
+    else: 
+        plt.show()
     plt.cla()
 
 def parse_info_for_plot(info_to_add):
@@ -165,6 +168,54 @@ def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTrad
 
     if save_fig:
         save_figure(title + title_info)
+    else:
+        plt.show()
+    plt.cla()
+
+def mupltiple_line_plot(polydegree, values_to_plot, plot_labels, subtitle, info_to_add = {}, xlabel = "Polynomial degree", ylabel = "Prediction Error", ylim = [0, 100], xscale = "linear", save_fig = False):
+    # Initialize the figure
+    plt.style.use('seaborn-darkgrid')
+    # create a color palette
+    palette = plt.get_cmap('Set1')
+
+    num_of_plots = len(values_to_plot)
+    assert len(plot_labels) == num_of_plots, "plot_labels != values_to_plot"
+
+    for plot_num in range(0, num_of_plots):
+        # Find the right spot on the plot
+        plt.subplot(np.ceil(num_of_plots/2), 2, plot_num+1)
+        
+        for val in values_to_plot[plot_num]:
+            # Plot the lineplot
+            plt.plot(polydegree, values_to_plot[plot_num][val], label=val)
+
+        if(plot_num == 1):
+            plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+        plt.ylim(ylim[0], ylim[1])
+        ax = plt.gca()
+        # Not ticks everywhere
+        if plot_num in range(num_of_plots) :
+            ax.axes.xaxis.set_ticklabels([])
+        if plot_num not in range(0, num_of_plots, 2):
+            ax.axes.yaxis.set_ticklabels([])
+        plt.xscale(xscale)
+
+        # Add title
+        plt.title(plot_labels[plot_num], loc='left', fontsize=12, fontweight=0, color=palette(plot_num) )
+    
+    # general title
+    plt.suptitle(subtitle, fontsize=14, fontweight=0, color='black', style='italic', y=1.02)
+    plt.figtext(0.5, 0.02, xlabel, ha='center', va='center')
+    plt.figtext(0.02, 0.5, ylabel, ha='center', va='center', rotation='vertical')
+    plt.tight_layout()
+
+    info_str, title_info = parse_info_for_plot(info_to_add)
+    if info_str != "":
+        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
+
+    if save_fig:
+        save_figure(subtitle + title_info)
     else:
         plt.show()
     plt.cla()
