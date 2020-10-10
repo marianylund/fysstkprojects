@@ -8,10 +8,9 @@ from RegLib.RegressionMethod import RegressionType
 from RegLib.BootstrapSampling import BootstrapSampling
 from RegLib.CrossValidationKFold import CrossValidationKFold
 from RegLib.HelperFunctions import plot_bias_variance_analysis, create_frankie_data, create_X, plot_bias_variance_analysis, plot_values_with_info, progressBar
-from PROJECT_SETUP import SEED
+from PROJECT_SETUP import SEED, SAVE_FIG
 
 np.random.seed(SEED)
-SAVE_FIG = True
 
 # Part d): Ridge Regression on the Franke function with resampling 
 

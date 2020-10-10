@@ -90,7 +90,8 @@ def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f',
     plt.title(title, loc='left', fontsize=22, fontweight=1)
     if save_fig:
         save_figure(title)
-    plt.show()
+    else: 
+        plt.show()
     plt.cla()
 
 def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title = "Confidence Intervals of beta", save_fig = False):
