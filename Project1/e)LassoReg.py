@@ -15,54 +15,54 @@ np.random.seed(SEED)
 # Part e) Lasso Regression on the Franke function with resampling 
 
 # #region Cross valid and bootstrap for different alphas
-# N = 40
-# noise = 0.3
-# p = 4
+N = 40
+noise = 0.3
+p = 4
 
-# alphas = [0.0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
-# l = len(alphas)
+alphas = [0.0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
+l = len(alphas)
 
-# trials = 1000
-# sample_count = N
+trials = 1000
+sample_count = N
 
-# kfolds = 5
+kfolds = 5
 
-# x, y, z = create_frankie_data(SEED, N,  noise_strength=noise)
-# perm_index = np.random.permutation(len(z))
+x, y, z = create_frankie_data(SEED, N,  noise_strength=noise)
+perm_index = np.random.permutation(len(z))
 
-# mse_boot = np.zeros(l); mse_kfold = np.zeros(l); mse_boot_train = np.zeros(l); mse_kfold_train = np.zeros(l); 
-# bias_boot = np.zeros(l); var_boot = np.zeros(l)
+mse_boot = np.zeros(l); mse_kfold = np.zeros(l); mse_boot_train = np.zeros(l); mse_kfold_train = np.zeros(l); 
+bias_boot = np.zeros(l); var_boot = np.zeros(l)
 
-# for i in range(len(alphas)):
-#     progressBar(i + 1, l)
-#     X = create_X(x, y, p, debug = False)
+for i in range(len(alphas)):
+    progressBar(i + 1, l)
+    X = create_X(x, y, p, debug = False)
 
-#     crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
-#     boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
+    crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
+    boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
 
-#     mse_kfold[i] = crossval.mse
-#     mse_kfold_train[i] = crossval.mse_train
-#     mse_boot[i] = boot.mse
-#     mse_boot_train[i] = boot.mse_train
-#     bias_boot[i] = boot.bias
-#     var_boot[i] = boot.var
+    mse_kfold[i] = crossval.mse
+    mse_kfold_train[i] = crossval.mse_train
+    mse_boot[i] = boot.mse
+    mse_boot_train[i] = boot.mse_train
+    bias_boot[i] = boot.bias
+    var_boot[i] = boot.var
 
-# values_to_plot = {
-#     "Bootstrap Test": mse_boot,
-#     "Cross-validation Test": mse_kfold,
-#     "Bootstrap Train": mse_boot_train,
-#     "Cross-validation Train": mse_kfold_train,
-# }
+values_to_plot = {
+    "Bootstrap Test": mse_boot,
+    "Cross-validation Test": mse_kfold,
+    "Bootstrap Train": mse_boot_train,
+    "Cross-validation Train": mse_kfold_train,
+}
 
-# info_to_add = {
-#     "N: ": N,
-#     "Noise: ": noise,
-#     "Trials: ": trials,
-#     "Kfolds: ": kfolds, 
-#     "Regression": " Lasso",
-# }
+info_to_add = {
+    "N: ": N,
+    "Noise: ": noise,
+    "Trials: ": trials,
+    "Kfolds: ": kfolds, 
+    "Regression": " Lasso",
+}
 
-# plot_values_with_info(alphas, values_to_plot, title = "e)LassoAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
+plot_values_with_info(alphas, values_to_plot, title = "e)LassoAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
 # #endregion
 
 # #region Bias-variance trade-off using bootstrap for different alphas
@@ -200,26 +200,26 @@ np.random.seed(SEED)
 
 #region Best model for frankie data
 
-N = 40
-noise = 0.3
-p = 4
-alpha = 0.1
+# N = 40
+# noise = 0.3
+# p = 4
+# alpha = 0.1
 
-x, y, z = create_frankie_data(SEED, N = N, noise_strength=noise)
-X = create_X(x, y, n = p)
-perm_index = np.random.permutation(len(z))
-sampling = SamplingMethod().train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Ridge, alpha=alpha)
+# x, y, z = create_frankie_data(SEED, N = N, noise_strength=noise)
+# X = create_X(x, y, n = p)
+# perm_index = np.random.permutation(len(z))
+# sampling = SamplingMethod().train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Ridge, alpha=alpha)
 
-info_to_add = {
-    "N: ": N,
-    "Noise: ": noise,
-    "Polynomial degree: " : p,
-    "Alpha: " : alpha,
-    "Regression: ": "Ridge",
-    "MSE: " : sampling.mse,
-    "R2: ": sampling.r2,
-}
+# info_to_add = {
+#     "N: ": N,
+#     "Noise: ": noise,
+#     "Polynomial degree: " : p,
+#     "Alpha: " : alpha,
+#     "Regression: ": "Ridge",
+#     "MSE: " : sampling.mse,
+#     "R2: ": sampling.r2,
+# }
 
-confidence_interval(X, z, sampling.model.beta, noise, N, info_to_add = info_to_add, save_fig = SAVE_FIG)
+# confidence_interval(X, z, sampling.model.beta, noise, N, info_to_add = info_to_add, save_fig = SAVE_FIG)
 
 #endregion

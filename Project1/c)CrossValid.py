@@ -8,7 +8,7 @@ from RegLib.RegressionMethod import RegressionType
 from RegLib.BootstrapSampling import BootstrapSampling
 from RegLib.CrossValidationKFold import CrossValidationKFold
 from RegLib.HelperFunctions import create_frankie_data, create_X, plot_bias_variance_analysis, plot_values_with_info, progressBar
-from PROJECT_SETUP import SEED
+from PROJECT_SETUP import SEED, SAVE_FIG
 
 np.random.seed(SEED)
 
@@ -16,50 +16,50 @@ np.random.seed(SEED)
 
 # MSE in Cross validation vs bootstrap
 
-# N = 40
-# noise = 0.3
-# p = 5
+N = 40
+noise = 0.3
+p = 5
 
-# trials = 1000
-# sample_count = N
+trials = 1000
+sample_count = N
 
-# kfolds = 5
+kfolds = 5
 
-# x, y, z = create_frankie_data(SEED, N,  noise_strength=noise)
-# perm_index = np.random.permutation(len(z))
+x, y, z = create_frankie_data(SEED, N,  noise_strength=noise)
+perm_index = np.random.permutation(len(z))
 
-# polydegree = np.zeros(p); mse_boot = np.zeros(p); mse_kfold = np.zeros(p); mse_boot_train = np.zeros(p); mse_kfold_train = np.zeros(p); 
+polydegree = np.zeros(p); mse_boot = np.zeros(p); mse_kfold = np.zeros(p); mse_boot_train = np.zeros(p); mse_kfold_train = np.zeros(p); 
 
-# for degree in range(p):
-#     progressBar(degree + 1, p)
+for degree in range(p):
+    progressBar(degree + 1, p)
 
-#     polydegree[degree] = degree + 1
+    polydegree[degree] = degree + 1
 
-#     X = create_X(x, y, degree, debug = False)
+    X = create_X(x, y, degree, debug = False)
 
-#     crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
-#     boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
+    crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
+    boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
 
-#     mse_kfold[degree] = crossval.mse
-#     mse_kfold_train[degree] = crossval.mse_train
-#     mse_boot[degree] = boot.mse
-#     mse_boot_train[degree] = boot.mse_train
+    mse_kfold[degree] = crossval.mse
+    mse_kfold_train[degree] = crossval.mse_train
+    mse_boot[degree] = boot.mse
+    mse_boot_train[degree] = boot.mse_train
 
-# values_to_plot = {
-#     "Bootstrap Test": mse_boot,
-#     "Cross-validation Test": mse_kfold,
-#     "Bootstrap Train": mse_boot_train,
-#     "Cross-validation Train": mse_kfold_train,
-# }
+values_to_plot = {
+    "Bootstrap Test": mse_boot,
+    "Cross-validation Test": mse_kfold,
+    "Bootstrap Train": mse_boot_train,
+    "Cross-validation Train": mse_kfold_train,
+}
 
-# info_to_add = {
-#     "N: ": N,
-#     "Noise: ": noise,
-#     "Trials: ": trials,
-#     "Kfolds: ": kfolds
-# }
+info_to_add = {
+    "N: ": N,
+    "Noise: ": noise,
+    "Trials: ": trials,
+    "Kfolds: ": kfolds
+}
 
-# plot_values_with_info(polydegree, values_to_plot, title = "CrossvalidationVSBootstrap", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=True)
+plot_values_with_info(polydegree, values_to_plot, title = "CrossvalidationVSBootstrap", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=SAVE_FIG)
 
 
 # Test different kfolds values:
@@ -135,4 +135,4 @@ np.random.seed(SEED)
 #     "Kfolds: ": kfolds
 # }
 
-# plot_values_with_info(polydegree, values_to_plot, title = "CrossValidationKfoldValues", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=True)
+# plot_values_with_info(polydegree, values_to_plot, title = "CrossValidationKfoldValues", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=SAVE_FIG)

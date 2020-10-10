@@ -14,78 +14,54 @@ np.random.seed(SEED)
 
 # g) OLS, Ridge and Lasso regression with resampling 
 
-#region Best Model
+#region Alpha values for Lasso and Ridge
 
 N = 100
 p = 7
-alpha = 10
+
+alphas = [0.0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
+l = len(alphas)
+
+trials = 1000
+sample_count = N
+
+kfolds = 5
 
 x, y, z = create_terrain_data(N, TERRAIN_PATH)
-X = create_X(x, y, n = p)
 perm_index = np.random.permutation(len(z))
-sampling = SamplingMethod().train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
+
+mse_boot = np.zeros(l); mse_kfold = np.zeros(l); mse_boot_train = np.zeros(l); mse_kfold_train = np.zeros(l); 
+bias_boot = np.zeros(l); var_boot = np.zeros(l)
+
+for i in range(len(alphas)):
+    progressBar(i + 1, l)
+    X = create_X(x, y, p, debug = False)
+
+    crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
+    boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
+
+    mse_kfold[i] = crossval.mse
+    mse_kfold_train[i] = crossval.mse_train
+    mse_boot[i] = boot.mse
+    mse_boot_train[i] = boot.mse_train
+    bias_boot[i] = boot.bias
+    var_boot[i] = boot.var
+
+values_to_plot = {
+    "Bootstrap Test": mse_boot,
+    "Cross-validation Test": mse_kfold,
+    "Bootstrap Train": mse_boot_train,
+    "Cross-validation Train": mse_kfold_train,
+}
 
 info_to_add = {
     "N: ": N,
-    "Regression: ": "Lasso",
-    "Alpha: ": alpha,
-    "Polynomial degree: " : p,
-    "MSE: " : int(sampling.mse),
-    "R2: ": int(sampling.r2)
+    "Trials: ": trials,
+    "Kfolds: ": kfolds, 
+    "Regression": " Lasso",
 }
 
-print(info_to_add)
-
-#endregion
-
-#region Alpha values for Lasso and Ridge
-
-# N = 100
-# p = 7
-
-# alphas = [0.0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
-# l = len(alphas)
-
-# trials = 1000
-# sample_count = N
-
-# kfolds = 5
-
-# x, y, z = create_terrain_data(N, TERRAIN_PATH)
-# perm_index = np.random.permutation(len(z))
-
-# mse_boot = np.zeros(l); mse_kfold = np.zeros(l); mse_boot_train = np.zeros(l); mse_kfold_train = np.zeros(l); 
-# bias_boot = np.zeros(l); var_boot = np.zeros(l)
-
-# for i in range(len(alphas)):
-#     progressBar(i + 1, l)
-#     X = create_X(x, y, p, debug = False)
-
-#     crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
-#     boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha = alphas[i])
-
-#     mse_kfold[i] = crossval.mse
-#     mse_kfold_train[i] = crossval.mse_train
-#     mse_boot[i] = boot.mse
-#     mse_boot_train[i] = boot.mse_train
-#     bias_boot[i] = boot.bias
-#     var_boot[i] = boot.var
-
-# values_to_plot = {
-#     "Bootstrap Test": mse_boot,
-#     "Cross-validation Test": mse_kfold,
-#     "Bootstrap Train": mse_boot_train,
-#     "Cross-validation Train": mse_kfold_train,
-# }
-
-# info_to_add = {
-#     "N: ": N,
-#     "Trials: ": trials,
-#     "Kfolds: ": kfolds, 
-#     "Regression": " Lasso",
-# }
-
-# plot_values_with_info(alphas, values_to_plot, title = "g)TerrainLassoAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
+plot_values_with_info(alphas, values_to_plot, title = "g)TerrainLassoAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
 
 
 #endregion
@@ -188,4 +164,28 @@ print(info_to_add)
 #plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorBootstrap", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=False)
 
 
-# #endregion
+#endregion
+
+#region Best Model
+
+N = 100
+p = 7
+alpha = 10
+
+x, y, z = create_terrain_data(N, TERRAIN_PATH)
+X = create_X(x, y, n = p)
+perm_index = np.random.permutation(len(z))
+sampling = SamplingMethod().train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
+
+info_to_add = {
+    "N: ": N,
+    "Regression: ": "Lasso",
+    "Alpha: ": alpha,
+    "Polynomial degree: " : p,
+    "MSE: " : int(sampling.mse),
+    "R2: ": int(sampling.r2)
+}
+
+print(info_to_add)
+
+#endregion

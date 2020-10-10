@@ -64,7 +64,7 @@ info_to_add = {
     "Regression": " Ridge",
 }
 
-#plot_values_with_info(alphas, values_to_plot, title = "d)RidgeAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
+plot_values_with_info(alphas, values_to_plot, title = "d)RidgeAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
 
 # Bias-variance trade-off using bootstrap for different alphas
 
