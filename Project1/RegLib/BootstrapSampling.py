@@ -8,7 +8,7 @@ class BootstrapSampling(SamplingMethod):
         self.trials = trials
         self.sample_count = sample_count
     
-    def train_and_test(self, X, y, perm_index = -1, model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
+    def train_and_test(self, X, y, perm_index = [-1], model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
         #assert sample_count >= X.shape[1], "Cannot fit matrix with " + str(X.shape[1]) + " deg of freedom, with just " + str(sample_count) + " samples"
         self.split_and_scale_train_test(X, y, perm_index, test_size, shuffle, normalize)
         self.train_test_bootstrap(self.X_train, self.X_test, self.y_train, self.y_test, model_type = RegressionType.OLS, alpha = 0.0)

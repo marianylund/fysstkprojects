@@ -4,7 +4,7 @@ from RegLib.RegressionMethod import RegressionMethod, RegressionType
 
 class SamplingMethod:
     
-    def train_and_test(self, X, y, perm_index = -1, model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
+    def train_and_test(self, X, y, perm_index = [-1], model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
         self.split_and_scale_train_test(X, y, perm_index, test_size, shuffle, normalize)
         self.model = RegressionMethod().fit(self.X_train, self.y_train, model_type, alpha)
         self.test_model(self.model, self.X_test, self.y_test)

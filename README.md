@@ -13,6 +13,13 @@ In the different files, I have commented out the majority of code for simplicity
 
 It should show a progress bar when running time-consuming tasks, by the end it should show a plot and print out some info to the console.
 
+### Testing
+To run the tests use RegressionTesting.py inside Project1 folder:
+```
+python -W ignore '.\RegressionTesting.py'
+```
+Error tolerance is sat to be 1e-10. This can be changed inside the script.
+
 ### Report folder
 Contains Latex code and pdf of the report
 

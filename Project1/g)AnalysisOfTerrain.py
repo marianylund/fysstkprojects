@@ -14,6 +14,30 @@ np.random.seed(SEED)
 
 # g) OLS, Ridge and Lasso regression with resampling 
 
+#region Best Model
+
+N = 100
+p = 7
+alpha = 10
+
+x, y, z = create_terrain_data(N, TERRAIN_PATH)
+X = create_X(x, y, n = p)
+perm_index = np.random.permutation(len(z))
+sampling = SamplingMethod().train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
+
+info_to_add = {
+    "N: ": N,
+    "Regression: ": "Lasso",
+    "Alpha: ": alpha,
+    "Polynomial degree: " : p,
+    "MSE: " : int(sampling.mse),
+    "R2: ": int(sampling.r2)
+}
+
+print(info_to_add)
+
+#endregion
+
 #region Alpha values for Lasso and Ridge
 
 # N = 100
@@ -68,97 +92,97 @@ np.random.seed(SEED)
 
 #region Bias-variance trade-off
 
-N = 100
-p = 10
-trials = 10000
-sample_count = N
-kfolds = 5
-alpha = 10
-x, y, z = create_terrain_data(N, TERRAIN_PATH)
-perm_index = np.random.permutation(len(z))
+# N = 100
+# p = 10
+# trials = 10000
+# sample_count = N
+# kfolds = 5
+# alpha = 10
+# x, y, z = create_terrain_data(N, TERRAIN_PATH)
+# perm_index = np.random.permutation(len(z))
 
-polydegree = np.zeros(p); r2_boot = np.zeros(p); mse_boot = np.zeros(p); bias_boot = np.zeros(p); var_boot = np.zeros(p)
-r2_crossval = np.zeros(p); mse_crossval = np.zeros(p); bias_crossval = np.zeros(p); var_crossval = np.zeros(p)
+# polydegree = np.zeros(p); r2_boot = np.zeros(p); mse_boot = np.zeros(p); bias_boot = np.zeros(p); var_boot = np.zeros(p)
+# r2_crossval = np.zeros(p); mse_crossval = np.zeros(p); bias_crossval = np.zeros(p); var_crossval = np.zeros(p)
 
-r2_boot_ridge = np.zeros(p); mse_boot_ridge = np.zeros(p); bias_boot_ridge = np.zeros(p); var_boot_ridge = np.zeros(p)
-r2_crossval_ridge = np.zeros(p); mse_crossval_ridge = np.zeros(p); bias_crossval_ridge = np.zeros(p); var_crossval_ridge = np.zeros(p)
+# r2_boot_ridge = np.zeros(p); mse_boot_ridge = np.zeros(p); bias_boot_ridge = np.zeros(p); var_boot_ridge = np.zeros(p)
+# r2_crossval_ridge = np.zeros(p); mse_crossval_ridge = np.zeros(p); bias_crossval_ridge = np.zeros(p); var_crossval_ridge = np.zeros(p)
 
-r2_boot_lasso = np.zeros(p); mse_boot_lasso = np.zeros(p); bias_boot_lasso = np.zeros(p); var_boot_lasso = np.zeros(p)
-r2_crossval_lasso = np.zeros(p); mse_crossval_lasso = np.zeros(p); bias_crossval_lasso = np.zeros(p); var_crossval_lasso = np.zeros(p)
+# r2_boot_lasso = np.zeros(p); mse_boot_lasso = np.zeros(p); bias_boot_lasso = np.zeros(p); var_boot_lasso = np.zeros(p)
+# r2_crossval_lasso = np.zeros(p); mse_crossval_lasso = np.zeros(p); bias_crossval_lasso = np.zeros(p); var_crossval_lasso = np.zeros(p)
 
-for degree in range(p):
-    progressBar(degree + 1, p)
+# for degree in range(p):
+#     progressBar(degree + 1, p)
 
-    polydegree[degree] = degree + 1
+#     polydegree[degree] = degree + 1
 
-    X = create_X(x, y, degree, debug = False)
-    boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
-    crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
+#     X = create_X(x, y, degree, debug = False)
+#     boot = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
+#     crossval = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.OLS)
 
-    boot_ridge = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Ridge, alpha=alpha)
-    crossval_ridge = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Ridge, alpha=alpha)
+#     boot_ridge = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Ridge, alpha=alpha)
+#     crossval_ridge = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Ridge, alpha=alpha)
 
-    boot_lasso = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
-    crossval_lasso = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
+#     boot_lasso = BootstrapSampling(trials, sample_count).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
+#     crossval_lasso = CrossValidationKFold(kfolds).train_and_test(X, z, perm_index = perm_index, model_type = RegressionType.Lasso, alpha=alpha)
 
-    r2_boot[degree] = boot.r2; mse_boot[degree] = boot.mse; bias_boot[degree] = boot.bias; var_boot[degree] = boot.var; 
-    r2_crossval[degree] = crossval.r2; mse_crossval[degree] = crossval.mse; bias_crossval[degree] = crossval.bias; var_crossval[degree] = crossval.var; 
+#     r2_boot[degree] = boot.r2; mse_boot[degree] = boot.mse; bias_boot[degree] = boot.bias; var_boot[degree] = boot.var; 
+#     r2_crossval[degree] = crossval.r2; mse_crossval[degree] = crossval.mse; bias_crossval[degree] = crossval.bias; var_crossval[degree] = crossval.var; 
 
-    r2_boot_ridge[degree] = boot_ridge.r2; mse_boot_ridge[degree] = boot_ridge.mse; bias_boot_ridge[degree] = boot_ridge.bias; var_boot_ridge[degree] = boot_ridge.var; 
-    r2_crossval_ridge[degree] = crossval_ridge.r2; mse_crossval_ridge[degree] = crossval_ridge.mse; bias_crossval_ridge[degree] = crossval_ridge.bias; var_crossval_ridge[degree] = crossval_ridge.var; 
+#     r2_boot_ridge[degree] = boot_ridge.r2; mse_boot_ridge[degree] = boot_ridge.mse; bias_boot_ridge[degree] = boot_ridge.bias; var_boot_ridge[degree] = boot_ridge.var; 
+#     r2_crossval_ridge[degree] = crossval_ridge.r2; mse_crossval_ridge[degree] = crossval_ridge.mse; bias_crossval_ridge[degree] = crossval_ridge.bias; var_crossval_ridge[degree] = crossval_ridge.var; 
 
-    r2_boot_lasso[degree] = boot_lasso.r2; mse_boot_lasso[degree] = boot_lasso.mse; bias_boot_lasso[degree] = boot_lasso.bias; var_boot_lasso[degree] = boot_lasso.var; 
-    r2_crossval_lasso[degree] = crossval_lasso.r2; mse_crossval_lasso[degree] = crossval_lasso.mse; bias_crossval_lasso[degree] = crossval_lasso.bias; var_crossval_lasso[degree] = crossval_lasso.var; 
+#     r2_boot_lasso[degree] = boot_lasso.r2; mse_boot_lasso[degree] = boot_lasso.mse; bias_boot_lasso[degree] = boot_lasso.bias; var_boot_lasso[degree] = boot_lasso.var; 
+#     r2_crossval_lasso[degree] = crossval_lasso.r2; mse_crossval_lasso[degree] = crossval_lasso.mse; bias_crossval_lasso[degree] = crossval_lasso.bias; var_crossval_lasso[degree] = crossval_lasso.var; 
 
 
-values_to_plot_boot = {
-    "Variance": var_boot,
-    "MSE": mse_boot,
-    "Bias^2": bias_boot,
-}
+# values_to_plot_boot = {
+#     "Variance": var_boot,
+#     "MSE": mse_boot,
+#     "Bias^2": bias_boot,
+# }
 
-values_to_plot_crossval = {
-    "Variance": var_crossval,
-    "MSE": mse_crossval,
-    "Bias^2": bias_crossval,
-}
+# values_to_plot_crossval = {
+#     "Variance": var_crossval,
+#     "MSE": mse_crossval,
+#     "Bias^2": bias_crossval,
+# }
 
-values_to_plot_boot_ridge = {
-    "Variance": var_boot_ridge,
-    "MSE": mse_boot_ridge,
-    "Bias^2": bias_boot_ridge,
-}
+# values_to_plot_boot_ridge = {
+#     "Variance": var_boot_ridge,
+#     "MSE": mse_boot_ridge,
+#     "Bias^2": bias_boot_ridge,
+# }
 
-values_to_plot_crossval_ridge = {
-    "Variance": var_crossval_ridge,
-    "MSE": mse_crossval_ridge,
-    "Bias^2": bias_crossval_ridge,
-}
+# values_to_plot_crossval_ridge = {
+#     "Variance": var_crossval_ridge,
+#     "MSE": mse_crossval_ridge,
+#     "Bias^2": bias_crossval_ridge,
+# }
 
-values_to_plot_boot_lasso = {
-    "Variance": var_boot_lasso,
-    "MSE": mse_boot_lasso,
-    "Bias^2": bias_boot_lasso,
-}
+# values_to_plot_boot_lasso = {
+#     "Variance": var_boot_lasso,
+#     "MSE": mse_boot_lasso,
+#     "Bias^2": bias_boot_lasso,
+# }
 
-values_to_plot_crossval_lasso = {
-    "Variance": var_crossval_lasso,
-    "MSE": mse_crossval_lasso,
-    "Bias^2": bias_crossval_lasso,
-}
+# values_to_plot_crossval_lasso = {
+#     "Variance": var_crossval_lasso,
+#     "MSE": mse_crossval_lasso,
+#     "Bias^2": bias_crossval_lasso,
+# }
 
-info_to_add = {
-    "N: ": N,
-    "Trials: ": trials,
-    "Kfolds: ": kfolds,
-    "Alpha: ": alpha,
-}
+# info_to_add = {
+#     "N: ": N,
+#     "Trials: ": trials,
+#     "Kfolds: ": kfolds,
+#     "Alpha: ": alpha,
+# }
 
-values_to_plot = [values_to_plot_boot, values_to_plot_crossval, values_to_plot_boot_ridge, values_to_plot_crossval_ridge, values_to_plot_boot_lasso, values_to_plot_crossval_lasso]
-plot_labels = ["OLS Bootstrap", "OLS Cross Validation", "Ridge Bootstrap", "Ridge Cross Validation", "Lasso Bootstrap", "Lasso Cross Validation"]
-ylim = [0, 10000]
+# values_to_plot = [values_to_plot_boot, values_to_plot_crossval, values_to_plot_boot_ridge, values_to_plot_crossval_ridge, values_to_plot_boot_lasso, values_to_plot_crossval_lasso]
+# plot_labels = ["OLS Bootstrap", "OLS Cross Validation", "Ridge Bootstrap", "Ridge Cross Validation", "Lasso Bootstrap", "Lasso Cross Validation"]
+# ylim = [0, 10000]
 
-mupltiple_line_plot(polydegree, values_to_plot, plot_labels, "Terrain Bias Variance Analysis", info_to_add = info_to_add, xlabel = "Polynomial degree", ylabel = "Prediction Error", ylim = ylim, xscale = "linear", save_fig = SAVE_FIG)
+# mupltiple_line_plot(polydegree, values_to_plot, plot_labels, "Terrain Bias Variance Analysis", info_to_add = info_to_add, xlabel = "Polynomial degree", ylabel = "Prediction Error", ylim = ylim, xscale = "linear", save_fig = SAVE_FIG)
 #plot_bias_variance_analysis(polydegree, values_to_plot, title = "g)TerrainBiasVarTradeoffOLS", info_to_add = info_to_add, save_fig = SAVE_FIG)
 
 #plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorBootstrap", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=False)

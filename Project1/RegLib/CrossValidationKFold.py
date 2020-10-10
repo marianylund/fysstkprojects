@@ -7,7 +7,7 @@ class CrossValidationKFold(SamplingMethod):
     def __init__(self, kfolds = 5):
         self.kfolds = kfolds
     
-    def train_and_test(self, X, y, perm_index = -1, model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
+    def train_and_test(self, X, y, perm_index = [-1], model_type = RegressionType.OLS, alpha = 0.0, test_size  = 0.2, shuffle = False, normalize=True):
         if(len(perm_index) > 1):
             X = X[perm_index]
             y = y[perm_index]

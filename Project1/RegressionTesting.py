@@ -2,7 +2,6 @@ from RegLib.RegressionMethod import RegressionMethod, RegressionType
 from RegLib.SamplingMethod import SamplingMethod
 from RegLib.HelperFunctions import create_frankie_data, create_X
 from RegLib.BootstrapSampling import BootstrapSampling
-#from CrossValidationKFold import CrossValidationKFold
 
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_squared_error, r2_score
@@ -12,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from random import random, seed
 
-error_tolerance = 1e-14
+error_tolerance = 1e-10
 
 def test_true():
     assert True, "Should be True"
@@ -55,21 +54,6 @@ def test_mean_and_std_of_scaled_data(X, z):
     assert(np.isclose(np.std(train_data_scaled), 1, atol = 1e-15, equal_nan=True), np.std(train_data_scaled))
     assert(np.isclose(np.mean(test_data_scaled), 0, atol = 1e-15, equal_nan=True), np.mean(test_data_scaled))
     assert(np.isclose(np.std(test_data_scaled), 1, atol = 1e-15, equal_nan=True), np.std(test_data_scaled))
-
-def test_Standard_Scaler(X, z):
-    print("Testing Standard Scaler")
-    X_train, X_test, Y_train, Y_test = train_test_split(X, z, test_size = 0.2)
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-    skl_X_train = scaler.transform(X_train)
-    skl_X_test = scaler.transform(X_test)
-
-    sampling = SamplingMethod()
-    sampling.split_and_scale_train_test(X, z)
-
-    diff = np.abs(np.abs(np.mean(sampling.X_train)) - np.abs(np.mean(skl_X_train)))
-    assert_msg = "\nDifference between means " + str(diff) + " should be less than " + str(error_tolerance) + ".Sampling: " + str(np.mean(sampling.X_train)) + " model: " + str(np.mean(skl_X_train))
-    assert (diff < error_tolerance), assert_msg
 
 def test_r2_with_sklearn(X, z):
     print("Testing r2 compared to sklearn r2 method")
@@ -145,12 +129,12 @@ if __name__ == "__main__":
     test_true()
     test_false()
     X, z = create_test_data()
-    #test_Standard_Scaler()
-    # test_r2_with_sklearn(X, z)
-    # test_ridge_with_sklearn(X, z)
-    # test_OLS_with_sklearn(X, z)
-    # test_bootstrap_sampling(X, z)
-    #test_mse_with_sklearn(X, z)
+    test_mean_and_std_of_scaled_data(X, z)
+    test_r2_with_sklearn(X, z)
+    test_ridge_with_sklearn(X, z)
+    test_OLS_with_sklearn(X, z)
+    test_bootstrap_sampling(X, z)
+    test_mse_with_sklearn(X, z)
     test_OLS_train_MSE_with_sklearn(X, z)
 
-    print("Everything passed")
+    print("All tests have passed")
