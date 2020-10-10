@@ -91,6 +91,7 @@ def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f',
     if save_fig:
         save_figure(title)
     plt.show()
+    plt.cla()
 
 def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title = "Confidence Intervals of beta", save_fig = False):
     sns.set_style("whitegrid")
@@ -106,6 +107,7 @@ def confidence_interval(X, z, beta, noise_strength, N, percentile = 1.95, title 
     if save_fig:
         save_figure(title + str(N) + str(noise_strength))
     plt.show()
+    plt.cla()
 
 def parse_info_for_plot(info_to_add):
     info_str = ""
@@ -125,7 +127,7 @@ def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsM
             plt.plot(polydegree, values_to_plot[val], label=val)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.legend()
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     info_str, title_info = parse_info_for_plot(info_to_add)
     
@@ -152,7 +154,7 @@ def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTrad
     plt.ylabel(ylabel)
     ax.stackplot(polydegree, y1, y2, labels=labels)
     ax.plot(polydegree, values_to_plot["MSE"], color="black", label = "MSE")
-    ax.legend(loc='upper right')
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.xscale(xscale)
     
     info_str, title_info = parse_info_for_plot(info_to_add)
@@ -164,6 +166,7 @@ def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTrad
         save_figure(title + title_info)
     else:
         plt.show()
+    plt.cla()
 
 def create_mesh(n, random_mesh = False, seed = None):
     if random_mesh:

@@ -8,6 +8,7 @@ from RegLib.HelperFunctions import create_frankie_data, create_X, plot_bias_vari
 from PROJECT_SETUP import SEED
 
 np.random.seed(SEED)
+SAVE_FIG = True
 
 # Part b): Bias-variance trade-off and resamplng techniques
 
@@ -44,7 +45,7 @@ info_to_add = {
     "Noise: ": noise
 }
 
-plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsModelComplexity", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=False)
+plot_values_with_info(polydegree, values_to_plot, title = "b)TestTrainErrorAsModelComplexity", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = info_to_add, save_fig=SAVE_FIG)
 
 # Bias-variance trade-off
 

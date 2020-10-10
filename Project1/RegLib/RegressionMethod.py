@@ -39,7 +39,6 @@ class RegressionMethod(object):
     def __find_beta_Lasso(self, X_train, y_train):
         clf = Lasso(alpha = self.alpha, fit_intercept=False, normalize=False, max_iter=10000, tol=0.006).fit(X_train, y_train)
         self.beta = clf.coef_
-        print(self.beta.shape)
         return self
 
     def get_y_pred(self, X_data):

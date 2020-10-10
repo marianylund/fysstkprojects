@@ -7,10 +7,11 @@ from RegLib.SamplingMethod import SamplingMethod
 from RegLib.RegressionMethod import RegressionType
 from RegLib.BootstrapSampling import BootstrapSampling
 from RegLib.CrossValidationKFold import CrossValidationKFold
-from RegLib.HelperFunctions import plot_bias_variance_analysis, create_frankie_data, create_X, plot_bias_variance_analysis, plot_values_with_info, progressBar
+from RegLib.HelperFunctions import plot_bias_variance_analysis, create_frankie_data, create_X, plot_values_with_info, progressBar
 from PROJECT_SETUP import SEED
 
 np.random.seed(SEED)
+SAVE_FIG = True
 
 # Part d): Ridge Regression on the Franke function with resampling 
 
@@ -20,7 +21,7 @@ N = 40
 noise = 0.3
 p = 4
 
-alphas = [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 0.0, 1.0, 10.0, 100.0]
+alphas = [0.0, 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
 l = len(alphas)
 
 trials = 1000
@@ -52,8 +53,8 @@ for i in range(len(alphas)):
 values_to_plot = {
     "Bootstrap Test": mse_boot,
     "Cross-validation Test": mse_kfold,
-    #"Bootstrap Train": mse_boot_train,
-    #"Cross-validation Train": mse_kfold_train,
+    "Bootstrap Train": mse_boot_train,
+    "Cross-validation Train": mse_kfold_train,
 }
 
 info_to_add = {
@@ -64,16 +65,7 @@ info_to_add = {
     "Regression": " Ridge",
 }
 
-#plot_values_with_info(alphas, values_to_plot, title = "RidgeAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=False, scatter = True)
-
-values_to_plot2 = {
-    # "Bootstrap Test": mse_boot,
-    #"Cross-validation Test": mse_kfold,
-    "Bootstrap Train": mse_boot_train,
-    "Cross-validation Train": mse_kfold_train,
-}
-
-#plot_values_with_info(alphas, values_to_plot2, title = "RidgeAlphaBootVsCrossTrain", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=False, scatter = True)
+#plot_values_with_info(alphas, values_to_plot, title = "d)RidgeAlphaBootVsCross", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
 
 # Bias-variance trade-off using bootstrap for different alphas
 
@@ -90,5 +82,7 @@ info_to_add = {
     "Regression": " Ridge",
 }
 
-#plot_values_with_info(alphas, values_to_plot, title = "BiasVarTradeoffRidgeAlphas", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=False, scatter = True)
+#plot_bias_variance_analysis(alphas, values_to_plot, title = "d)BiasVarTradeoffSumRidgeAlphas", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
+
+#plot_values_with_info(alphas, values_to_plot, title = "d)BiasVarTradeoffRidgeAlphas", xlabel = "λ values", ylabel = "Prediction Error", info_to_add = info_to_add, xscale = "log", save_fig=SAVE_FIG)
 
