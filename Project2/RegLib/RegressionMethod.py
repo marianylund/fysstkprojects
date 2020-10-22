@@ -8,7 +8,7 @@ class RegressionType(enum.Enum):
    Ridge = 1
    Lasso = 2
 
-class RegressionMethod(object):
+class RegressionMethod():
 
     def fit(self, X_train, y_train, model_type = RegressionType.OLS, alpha = 0.0):
         self.alpha = alpha
