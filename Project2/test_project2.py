@@ -12,13 +12,15 @@ from RegLib.RegressionMethod import RegressionType
 from RegLib.HelperFunctions import confidence_interval, create_frankie_data, create_X
 from RegLib.load_save_data import *
 from PROJECT_SETUP import SEED, CHECKPOINTS_DIR
+from NeuralNetwork.configs.default import *
+from NeuralNetwork.trainer import train_sgd
 
 error_tolerance = 1e-10
 
 def create_test_data():
     N = 20
     noise_strength = 0.1
-    p = 2
+    p = 1
 
     x, y, z = create_frankie_data(SEED, N, noise_strength)
     X = create_X(x, y, p)
@@ -72,13 +74,15 @@ def test_classification_softmax_scikit():
     clf.predict([[1., 2.]]) #array([[1, 1]])
     clf.predict([[0., 0.]]) #array([[0, 1]])
 
-
+def test_sgd(X, y):
+    train_sgd(cfg, X, y)
     
 
 if __name__ == "__main__":
     print("Start tests for project 2")
     X, z = create_test_data()
     #test_saving_and_loading_model(X, z)
-    test_regression_learning_scikit(X, z)
+    #test_regression_learning_scikit(X, z)
+    test_sgd(X, z)
 
     print("All tests have passed")
