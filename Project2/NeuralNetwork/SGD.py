@@ -1,8 +1,11 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 from pathlib import Path
+from math import inf
 
-from RegLib.load_save_data import *
+from RegLib.load_save_data import save_checkpoint
+from RegLib.HelperFunctions import progressBar
+
 # Needed for types:
 from typing import Callable
 from yacs.config import CfgNode as CN
@@ -29,16 +32,18 @@ class SGD():
         train_r2 = {}
         lr_step = {}
         
+        best_mse = inf # 0 is best
+        #best_r2 = -inf # 1 is best
         # early_stopping_value = 0
         # early_stopping_step = 0
 
         global_step = 0
+        total_steps = cfg.OPTIM.NUM_EPOCHS * num_batches_per_epoch
         
         for epoch in range(cfg.OPTIM.NUM_EPOCHS):
-            print("Epohs: ", epoch)
 
             for step in range(num_batches_per_epoch):
-                print("Step gone: ", step)
+                progressBar(global_step, total_steps)
 
                 # Select the mini-batch
                 start = step * batch_size
@@ -52,10 +57,26 @@ class SGD():
                 model.w = model.w - _lr_step
                 
                 y_pred = X_batch @ model.w
-                train_mse[global_step] = SGD.MSE(y_batch, y_pred)
+                _mse = SGD.MSE(y_batch, y_pred)
+                train_mse[global_step] = _mse
+
                 train_r2[global_step] = SGD.R2(y_batch, y_pred)
                 learning_rate_all[global_step] = learning_rate
 
+                if _mse < best_mse: # Save best model
+                    best_mse = _mse
+                    test_pred = X_test @ model.w
+                    state_dict = {
+                        "Step": global_step,
+                        "Weights": model.w.tolist(),
+                        "Test_mse": SGD.MSE(y_test, test_pred),
+                        "Test_r2": SGD.R2(y_test, test_pred),
+                        "Train_mse": train_mse,
+                        "Train_r2": train_r2,
+                        "Learning_rate": learning_rate_all,
+                        "Learning_step": lr_step
+                    }
+                    save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=5)
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
                     state_dict = {
                         "Weights": model.w.tolist(),
@@ -65,10 +86,12 @@ class SGD():
                         "Learning_step": lr_step
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=5)
-
+                if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and np.mean(_lr_step) <= cfg.OPTIM.EARLY_STOP_LR_STEP):
+                    print(global_step, " step. Finished early: ", np.mean(_lr_step))
+                    return self
                 global_step += 1
         print("Finished.")
-        return model, train_mse
+        return self
     
     def split_and_scale_train_test(self, X, y, perm_index = [-1], test_size  = 0.2):
         assert X.shape[0] == y.shape[0], ("X.shape[0] and y.shape[0] needs to be the same length, but: " + str(X.shape[0]) + " != " + str(y.shape[0]))

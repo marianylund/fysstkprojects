@@ -5,7 +5,6 @@ import pathlib
 
 def write_json(data:dict, filepath: pathlib.Path): 
     with filepath.open(mode='w') as f:
-        print("f:" + f.name)
         json.dump(data, f) 
 
 def load_data_as_dict(filename) -> dict:

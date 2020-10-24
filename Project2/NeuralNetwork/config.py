@@ -45,8 +45,9 @@ class Config(object):
         _cfg.OPTIM.BATCH_SIZE = 32
         _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.L2_REG_LAMBDA = 0.001
+        _cfg.OPTIM.EARLY_STOP_LR_STEP = -1 #1e-5 # -1 to turn it off
 
-        _cfg.SCHEDULER = False # scheduler: Callable[[float, float, float], float] = None
+        _cfg.OPTIM.SCHEDULER = False # scheduler: Callable[[float, float, float], float] = None
 
         # test options
         _cfg.EVAL_STEP = 500 # Evaluate dataset every eval_step, disabled when eval_step < 0
