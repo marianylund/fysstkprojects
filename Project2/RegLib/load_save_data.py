@@ -1,11 +1,26 @@
 import json
 import pathlib
+import numpy as np
+from sklearn.model_selection import ParameterGrid
+
+class NpEncoder(json.JSONEncoder): # from https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable/50916741
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, ParameterGrid):
+            return list(obj)
+        else:
+            return super(NpEncoder, self).default(obj)
 
 # Inspired by the code from Håkon Hukkelås github.com/hukkelas
 
 def write_json(data:dict, filepath: pathlib.Path): 
     with filepath.open(mode='w') as f:
-        json.dump(data, f) 
+        json.dump(data, f, cls=NpEncoder) 
 
 def load_data_as_dict(filename) -> dict:
     with open(filename) as json_file: 

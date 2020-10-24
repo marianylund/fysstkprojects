@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 from math import inf
+from time import time
 
 from RegLib.load_save_data import save_checkpoint
 from RegLib.HelperFunctions import progressBar
@@ -35,6 +36,8 @@ class SGD():
 
         global_step = 0
         total_steps = cfg.OPTIM.NUM_EPOCHS * num_batches_per_epoch
+
+        start_time = time()
         
         for epoch in range(cfg.OPTIM.NUM_EPOCHS):
 
@@ -63,16 +66,17 @@ class SGD():
                 if _mse < best_mse: # Save best model
                     best_mse = _mse
                     test_pred = X_test @ model.w
+                    self.best_test_mse = SGD.MSE(y_test, test_pred)
                     state_dict = {
                         "Step": global_step,
                         "Weights": model.w.tolist(),
-                        "Test_mse": SGD.MSE(y_test, test_pred),
+                        "Test_mse": self.best_test_mse,
                         "Test_r2": SGD.R2(y_test, test_pred),
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,
                     }
-                    save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=5)
+                    save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=1)
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
                     state_dict = {
                         "Weights": model.w.tolist(),
@@ -80,11 +84,13 @@ class SGD():
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,
                     }
-                    save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=5)
-                if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and np.mean(_lr_step) <= cfg.OPTIM.EARLY_STOP_LR_STEP):
+                    save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=1)
+                if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and abs(np.mean(_lr_step)) <= cfg.OPTIM.EARLY_STOP_LR_STEP):
+                    self.process_time = time() - start_time
                     print(global_step, " step. Finished early: ", np.mean(_lr_step))
                     return self
                 global_step += 1
+        self.process_time = time() - start_time
         print("Finished.")
         return self
     

@@ -41,28 +41,28 @@ class Config(object):
         _cfg.TEST_SIZE = 0.2
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 50
-        _cfg.OPTIM.BATCH_SIZE = 32
+        _cfg.OPTIM.NUM_EPOCHS = 100
+        _cfg.OPTIM.BATCH_SIZE = 20
         _cfg.OPTIM.LR = 1e-3
-        _cfg.OPTIM.L2_REG_LAMBDA = 0.001
-        _cfg.OPTIM.EARLY_STOP_LR_STEP = -1 #1e-5 # -1 to turn it off
-        _cfg.OPTIM.LR_DECAY = 0.1 # 0 to turn it off
+        _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off
+        _cfg.OPTIM.EARLY_STOP_LR_STEP = -1.0 #1e-5 # -1 to turn it off
+        _cfg.OPTIM.LR_DECAY = 0.0 # 0 to turn it off
 
-        _cfg.OPTIM.SCHEDULER = False # scheduler: Callable[[float, float, float], float] = None
+        # scheduler: Callable[[float, float, float], float] = None
 
         # test options
-        _cfg.EVAL_STEP = 500 # Evaluate dataset every eval_step, disabled when eval_step < 0
-        _cfg.MODEL_SAVE_STEP = 50 # Save checkpoint every save_step
-        _cfg.LOG_STEP = 10 # Print logs every log_stepPrint logs every log_step
+        #_cfg.EVAL_STEP = -1 # Evaluate dataset every eval_step, disabled when eval_step < 0
+        _cfg.MODEL_SAVE_STEP = 500 # Save checkpoint every save_step
+        #_cfg.LOG_STEP = 10 # Print logs every log_stepPrint logs every log_step
 
-        _cfg.OUTPUT_DIR = "test_sdg_decay"  # folder inside checkpoints
+        _cfg.OUTPUT_DIR = "test_sdg"  # folder inside checkpoints
 
         _cfg.DATA = CN()
         # Settings for Frankie data
         _cfg.DATA.FRANKIE = CN()
-        _cfg.DATA.FRANKIE.N = 20
+        _cfg.DATA.FRANKIE.N = 100
         _cfg.DATA.FRANKIE.NOISE = 0.1
-        _cfg.DATA.FRANKIE.P = 2
+        _cfg.DATA.FRANKIE.P = 5
 
         # Override parameter values from YAML file first, then from override list.
         self._cfg = _cfg

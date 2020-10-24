@@ -132,12 +132,9 @@ def parse_info_for_plot(info_to_add):
 
 def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsModelComplexity", xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = {}, xscale = "linear", save_fig = False, scatter = False):
     plt.style.use('seaborn-darkgrid')
-    if scatter:
-        for val in values_to_plot:
-            plt.plot(polydegree, values_to_plot[val], 'o', label=val)
-    else:
-        for val in values_to_plot:
-            plt.plot(polydegree, values_to_plot[val], label=val)
+    scatter_label = 'o' if scatter else ''
+    for val in values_to_plot:
+        plt.plot(polydegree, values_to_plot[val], scatter_label, label=val)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -157,14 +154,16 @@ def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsM
 
     plt.cla()
 
-def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, title = "SGD", xlabel = "Step", y1_label = "Prediction Error", y2_label = "Learning Rate", info_to_add = {}, xscale = "linear", save_fig = False):
+def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, title = "SGD", xlabel = "Step", y1_label = "Prediction Error", y2_label = "Learning Rate", info_to_add = {}, xscale = "linear", save_fig = False, scatter = False):
     plt.style.use('seaborn-darkgrid')
     fig, ax1 = plt.subplots()
+
+    scatter_label = 'o' if scatter else ''
 
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(y1_label)
     for val in values_to_plot_y1:
-        ax1.plot(steps, values_to_plot_y1[val], label=val)
+        ax1.plot(steps, values_to_plot_y1[val], scatter_label, label=val)
 
     ax2 = ax1.twinx()
 
@@ -172,7 +171,7 @@ def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, tit
     ax2.set_ylabel(y2_label, color=color)
     ax2.set_yscale("log")
     for val in values_to_plot_y2:
-        ax2.plot(steps, values_to_plot_y2[val], label=val, color=color)
+        ax2.plot(steps, values_to_plot_y2[val], scatter_label, label=val, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
 
     fig.legend(loc='center left', bbox_to_anchor=(1, 0.5))
