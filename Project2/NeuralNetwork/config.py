@@ -46,6 +46,7 @@ class Config(object):
         _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.L2_REG_LAMBDA = 0.001
         _cfg.OPTIM.EARLY_STOP_LR_STEP = -1 #1e-5 # -1 to turn it off
+        _cfg.OPTIM.LR_DECAY = 0.1 # 0 to turn it off
 
         _cfg.OPTIM.SCHEDULER = False # scheduler: Callable[[float, float, float], float] = None
 
@@ -54,7 +55,7 @@ class Config(object):
         _cfg.MODEL_SAVE_STEP = 50 # Save checkpoint every save_step
         _cfg.LOG_STEP = 10 # Print logs every log_stepPrint logs every log_step
 
-        _cfg.OUTPUT_DIR = "test_sdg"  # folder inside checkpoints
+        _cfg.OUTPUT_DIR = "test_sdg_decay"  # folder inside checkpoints
 
         _cfg.DATA = CN()
         # Settings for Frankie data

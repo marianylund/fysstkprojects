@@ -24,23 +24,21 @@ class SGD():
                     checkpoints_path:Path):
         batch_size = cfg.OPTIM.BATCH_SIZE
         num_batches_per_epoch = X_train.shape[0] // batch_size
-        learning_rate = cfg.OPTIM.LR # do something with the scheduler
-        #if cfg.SCHEDULER:
-            # do something with the scheduler
+        learning_rate = cfg.OPTIM.LR
+        decay = cfg.OPTIM.LR_DECAY
+
         train_mse = {}
         learning_rate_all = {}
         train_r2 = {}
-        lr_step = {}
         
         best_mse = inf # 0 is best
-        #best_r2 = -inf # 1 is best
-        # early_stopping_value = 0
-        # early_stopping_step = 0
 
         global_step = 0
         total_steps = cfg.OPTIM.NUM_EPOCHS * num_batches_per_epoch
         
         for epoch in range(cfg.OPTIM.NUM_EPOCHS):
+
+            _lr = SGD.learning_schedule(learning_rate, decay, epoch)
 
             for step in range(num_batches_per_epoch):
                 progressBar(global_step, total_steps)
@@ -52,8 +50,7 @@ class SGD():
 
                 # Compute gradient:
                 model.forward(X_batch, y_batch)
-                _lr_step = learning_rate * model.grad
-                lr_step[global_step] = _lr_step.tolist()
+                _lr_step = _lr * model.grad
                 model.w = model.w - _lr_step
                 
                 y_pred = X_batch @ model.w
@@ -61,7 +58,7 @@ class SGD():
                 train_mse[global_step] = _mse
 
                 train_r2[global_step] = SGD.R2(y_batch, y_pred)
-                learning_rate_all[global_step] = learning_rate
+                learning_rate_all[global_step] = _lr
 
                 if _mse < best_mse: # Save best model
                     best_mse = _mse
@@ -74,7 +71,6 @@ class SGD():
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,
-                        "Learning_step": lr_step
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=5)
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
@@ -83,7 +79,6 @@ class SGD():
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,
-                        "Learning_step": lr_step
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=5)
                 if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and np.mean(_lr_step) <= cfg.OPTIM.EARLY_STOP_LR_STEP):
@@ -110,8 +105,8 @@ class SGD():
         return np.all(np.diff(a) > 0)
 
     @staticmethod
-    def learning_schedule(t:float, t0:float, t1:float) -> float: 
-        return t0/(t+t1)
+    def learning_schedule(learning_rate:float, decay:float, epoch:float) -> float: 
+        return learning_rate * 1/(1 + decay * epoch)
 
     @staticmethod
     def R2(y_data, y_pred):
