@@ -53,7 +53,7 @@ class Config(object):
         _cfg.MODEL = CN()
         _cfg.MODEL.LINEAR = True
         _cfg.MODEL.SHAPE = [10, 1] # For linear model the last layer will be overwritten to have 1 neuron
-        _cfg.MODEL.ACTIVATION_FUNCTIONS = ["sigmoid", "identity"]
+        _cfg.MODEL.ACTIVATION_FUNCTIONS = ["sigmoid", "identity"] # {'identity', 'logistic', 'tanh', 'relu', 'leaky_relu'}
         _cfg.MODEL.LEAKY_SLOPE = 0.1 # Is used only if activation function is "leaky_relu"
 
         # scheduler: Callable[[float, float, float], float] = None

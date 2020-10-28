@@ -98,20 +98,20 @@ class Trainer():
                     self.best_test_mse = SGD.MSE(y_test, test_pred)
                     state_dict = {
                         "Step": global_step,
-                        "Weights": model.ws.tolist(),
                         "Test_mse": self.best_test_mse,
                         "Test_r2": SGD.R2(y_test, test_pred),
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
+                        "Weights": model.ws.tolist(),
                         "Learning_rate": learning_rate_all,
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=1)
 
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
                     state_dict = {
-                        "Weights": model.ws.tolist(),
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
+                        "Weights": model.ws.tolist(),
                         "Learning_rate": learning_rate_all,
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=1)

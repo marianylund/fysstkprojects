@@ -8,7 +8,7 @@ DATA:
   NAME: franke
 MODEL:
   ACTIVATION_FUNCTIONS:
-  - sigmoid
+  - tanh
   - identity
   LEAKY_SLOPE: 0.1
   LINEAR: true

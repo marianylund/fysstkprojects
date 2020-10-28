@@ -9,8 +9,12 @@ class MultiLayerModel():
         self.I = input_nodes
         self.linear = cfg.MODEL.LINEAR # false if classification
         self.neurons_per_layer = cfg.MODEL.SHAPE
+        self.activation_functions = cfg.MODEL.ACTIVATION_FUNCTIONS
+        assert len(self.neurons_per_layer) == len(self.activation_functions), " the number of layers and activations is not equal: " + str(len(self.neurons_per_layer)) + " " + str(len(self.activation_functions))
         if self.linear:
             self.neurons_per_layer[-1] = 1 # if it is linear, input will be equal the output
+            assert self.activation_functions[-1] != "softmax", " if the model is linear, the last activation function should not be softmax"
+
         self.shape = [input_nodes] + self.neurons_per_layer
         self.num_of_layers = len(cfg.MODEL.SHAPE)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
@@ -58,7 +62,7 @@ class MultiLayerModel():
         return soft_max_var
 
 # TODO: use it in backprop when softmax    
-    def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
+    def cross_entropy_loss(self, targets: np.ndarray, outputs: np.ndarray):
         assert targets.shape == outputs.shape,\
             f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
 
@@ -69,7 +73,7 @@ class MultiLayerModel():
         return ce
 
     def forward_activation(self, z, func:str = "identity") -> np.ndarray:
-        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', leaky_relu}, default='identity'"""
+        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', 'leaky_relu'}, default='identity'"""
         if func == "identity":
             return z
         if func == "sigmoid":
@@ -86,7 +90,7 @@ class MultiLayerModel():
             raise ValueError(func, " not found in activation functions")
       
     def grad_activation(self, z, func:str = "identity") -> np.ndarray:
-        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', leaky_relu}, default='identity'"""
+        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', 'leaky_relu'}, default='identity'"""
         if func == "identity":
             return z
         elif func == "sigmoid":
@@ -110,16 +114,17 @@ class MultiLayerModel():
         # For all layers except the last one
         for layer in range(self.num_of_layers - 1):
             self.zs[layer] = np.dot(self.activations[layer], self.ws[layer])
-            self.activations[layer + 1] = self.sigmoid(self.zs[layer])
+            self.activations[layer + 1] = self.forward_activation(self.zs[layer], self.activation_functions[layer]) #self.sigmoid(self.zs[layer])
         
         last_layer = self.num_of_layers - 1
         self.zs[last_layer] = np.dot(self.activations[last_layer], self.ws[last_layer])
 
         # here use soft-max for the last layer if classification, but just identity if linear:
-        if self.linear:
-            return np.asarray(self.zs[last_layer])
-        else:
-            return self.soft_max(self.zs[last_layer])
+        return self.forward_activation(self.zs[last_layer], self.activation_functions[last_layer])
+        # if self.linear:
+        #     return np.asarray(self.zs[last_layer])
+        # else:
+        #     return self.soft_max(self.zs[last_layer])
 
     def backward(self, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -136,7 +141,8 @@ class MultiLayerModel():
             delta_cost = np.dot(output_error, self.ws[-l+1].T)
             # Compute error
             # δ = ∇C ⊙ σ′(z).
-            output_error = self.sigmoid_prime(self.zs[-l]) * delta_cost
+            activation = self.grad_activation(self.zs[-l], self.activation_functions[-l]) # self.sigmoid_prime(self.zs[-l])
+            output_error = activation * delta_cost
             # backpropogate the error
             # δ = ((w of next layer )^T * δ of next layer) ⊙ σ′(z)
             average_grad = np.dot(self.activations[-l].T, output_error) / N # OBS activations[-l-1] in book and no /N
