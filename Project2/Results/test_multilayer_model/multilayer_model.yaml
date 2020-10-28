@@ -2,10 +2,11 @@ DATA:
   FRANKIE:
     N: 100
     NOISE: 0.1
-    P: 5
+    P: 2
 MODEL:
   LINEAR: true
   SHAPE:
+  - 10
   - -1
 MODEL_SAVE_STEP: 500
 OPTIM:

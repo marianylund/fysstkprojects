@@ -31,8 +31,8 @@ class Trainer():
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
         self.X_train, self.X_test = SGD.scale_standard(self.X_train, self.X_test)
         # Force the correct shape:
-        # self.y_test.shape = (self.y_test.shape[0], 1)
-        # self.y_train.shape = (self.y_train.shape[0], 1)
+        self.y_test.shape = (self.y_test.shape[0], 1)
+        self.y_train.shape = (self.y_train.shape[0], 1)
         return self
     
     def train(self, cfg:CN, model, X_train:np.ndarray, X_test:np.ndarray, y_train:np.ndarray, y_test:np.ndarray,
@@ -75,7 +75,8 @@ class Trainer():
 
                 # Compute gradient:
                 y_pred = model.forward(X_batch)
-                model.backward(X_batch, y_pred, y_batch)
+                model.backward(y_pred, y_batch)
+
 
                 # Update the weights
                 # if(use_momentum):
@@ -93,7 +94,7 @@ class Trainer():
 
                 if _mse < best_mse: # Save best model
                     best_mse = _mse
-                    test_pred = X_test @ model.ws
+                    test_pred = model.forward(X_test)
                     self.best_test_mse = SGD.MSE(y_test, test_pred)
                     state_dict = {
                         "Step": global_step,
@@ -109,7 +110,7 @@ class Trainer():
 
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
                     state_dict = {
-                        "Weights": model.w.tolist(),
+                        "Weights": model.ws.tolist(),
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,

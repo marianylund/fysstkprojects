@@ -143,7 +143,8 @@ class SimpleModel():
         self.l2_reg_lambda = l2_reg_lambda
     
     def forward(self, X_batch, y_batch):
-        self.grad = 2 * X_batch.T @ ((X_batch @ self.w) - y_batch)
+        z = (X_batch @ self.w)
+        self.grad = 2 * X_batch.T @ (z - y_batch)
         return self
 
     def zero_grad(self) -> None:

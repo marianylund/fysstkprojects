@@ -51,7 +51,7 @@ class Config(object):
 
         _cfg.MODEL = CN()
         _cfg.MODEL.LINEAR = True
-        _cfg.MODEL.SHAPE = [-1] # Last layer for linear model will be overwritten to be as input
+        _cfg.MODEL.SHAPE = [10, -1] # Last layer for linear model will be overwritten to be as input
 
         # scheduler: Callable[[float, float, float], float] = None
 
@@ -67,7 +67,7 @@ class Config(object):
         _cfg.DATA.FRANKIE = CN()
         _cfg.DATA.FRANKIE.N = 100
         _cfg.DATA.FRANKIE.NOISE = 0.1
-        _cfg.DATA.FRANKIE.P = 5
+        _cfg.DATA.FRANKIE.P = 2
 
         # Override parameter values from YAML file first, then from override list.
         self._cfg = _cfg

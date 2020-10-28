@@ -10,9 +10,8 @@ class MultiLayerModel():
         self.linear = cfg.MODEL.LINEAR # false if classification
         self.neurons_per_layer = cfg.MODEL.SHAPE
         if self.linear:
-            self.neurons_per_layer[-1] = input_nodes # if it is linear, input will be equal the output
+            self.neurons_per_layer[-1] = 1 # if it is linear, input will be equal the output
         self.shape = [input_nodes] + self.neurons_per_layer
-        print("Shape: ", self.shape)
         self.num_of_layers = len(cfg.MODEL.SHAPE)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
 
@@ -56,43 +55,32 @@ class MultiLayerModel():
         soft_max_var = z_exp/part
         return soft_max_var
 
-    def forward(self, X: np.ndarray) -> np.ndarray:
-        self.activations[0] = X
-        print("Number of layers: " + str(self.num_of_layers))
+    def forward(self, X_data: np.ndarray) -> np.ndarray:
+        self.activations[0] = X_data
         # For all layers except the last one
         for layer in range(self.num_of_layers - 1):
-            # print("Layer: " + str(layer))
             self.zs[layer] = np.dot(self.activations[layer], self.ws[layer])
             self.activations[layer + 1] = self.sigmoid(self.zs[layer])
-            print("Layer: ", str(layer), " zs: ", self.zs[layer].shape, " activation: ", self.activations[layer + 1].shape)
         
-        # here use soft-max for the last layer if classification, but just identity if linear:
         last_layer = self.num_of_layers - 1
+        self.zs[last_layer] = np.dot(self.activations[last_layer], self.ws[last_layer])
+
+        # here use soft-max for the last layer if classification, but just identity if linear:
         if self.linear:
-            self.zs[last_layer] = np.dot(self.activations[last_layer], self.ws[last_layer])
-            self.activations[last_layer] = self.sigmoid(self.zs[last_layer])
-            y_pred = self.activations[last_layer]
-            print("y_pred: ", y_pred.shape)
-           # y_pred.shape = (y_pred.shape[0], 1)
-            return y_pred
+            return np.asarray(self.zs[last_layer])
         else:
-            self.zs[last_layer] = np.dot(self.activations[last_layer], self.ws[last_layer])
-            y_pred = self.soft_max(self.zs[last_layer])
-            return y_pred
+            return self.soft_max(self.zs[last_layer])
 
-    def backward(self, X: np.ndarray, outputs: np.ndarray,
+    def backward(self, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
-
         assert targets.shape == outputs.shape,\
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
 
         N = targets.shape[0]
 
         output_error = self.cost_derivative(targets, outputs)
-        print("Backwards activations: ", self.activations)
         self.grads[-1] = np.dot(self.activations[-1].T, output_error) / N
         for l in range(2, self.num_of_layers + 1): # OBS no +1 in the book
-            print("Backward layer: ", str(l), "activations: ", self.activations[-l])
 
             # with ndarrays for hadamart multiplication just use *
             delta_cost = np.dot(output_error, self.ws[-l+1].T)
