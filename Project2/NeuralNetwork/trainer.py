@@ -9,18 +9,18 @@ from RegLib.load_save_data import save_checkpoint
 from RegLib.HelperFunctions import progressBar
 from NeuralNetwork.MultiLayerModel import MultiLayerModel
 from NeuralNetwork.SGD import SGD
+from NeuralNetwork.dataloader import DataLoader
 
 # Needed for types:
 from typing import Callable
 from yacs.config import CfgNode as CN
 
 class Trainer():
-    def train_and_test(self, cfg:CN, X, y, checkpoints_path:Path = None, perm_index = [-1]):
-        self.model = MultiLayerModel(cfg, X.shape[1])
-        self.split_and_scale_train_test(X, y, perm_index, cfg.TEST_SIZE)
+    def train_and_test(self, cfg:CN, data_loader:DataLoader, checkpoints_path:Path = None):
+        self.model = MultiLayerModel(cfg, data_loader.X_train.shape[1]) # here it was X.shape[1]
         if(checkpoints_path == None):
             checkpoints_path = Path.cwd()
-        self.train(cfg, self.model, self.X_train, self.X_test, self.y_train, self.y_test, checkpoints_path)
+        self.train(cfg, self.model, data_loader.X_train, data_loader.X_test, data_loader.y_train, data_loader.y_test, checkpoints_path)
         return self
 
     def split_and_scale_train_test(self, X, y, perm_index = [-1], test_size  = 0.2):

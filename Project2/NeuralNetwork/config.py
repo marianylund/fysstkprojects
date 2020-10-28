@@ -42,7 +42,7 @@ class Config(object):
         _cfg.SHUFFLE = False
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 100
+        _cfg.OPTIM.NUM_EPOCHS = 1
         _cfg.OPTIM.BATCH_SIZE = 20
         _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off
@@ -63,7 +63,7 @@ class Config(object):
         _cfg.MODEL_SAVE_STEP = 500 # Save checkpoint every save_step
         #_cfg.LOG_STEP = 10 # Print logs every log_stepPrint logs every log_step
 
-        _cfg.OUTPUT_DIR = "test_multilayer_model"  # folder inside checkpoints
+        _cfg.OUTPUT_DIR = "test_data_loader"  # folder inside checkpoints
 
         _cfg.DATA = CN()
         _cfg.DATA.NAME = "franke" # {"franke", "mnist"}

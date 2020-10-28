@@ -14,7 +14,7 @@ class MultiLayerModel():
         self.shape = [input_nodes] + self.neurons_per_layer
         self.num_of_layers = len(cfg.MODEL.SHAPE)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
-        self.leaky_slope = cfg.
+        self.leaky_slope = cfg.MODEL.LEAKY_SLOPE
 
         # Initialise the weights to randomly sampled
         self.ws = []
