@@ -14,6 +14,7 @@ class MultiLayerModel():
         self.shape = [input_nodes] + self.neurons_per_layer
         self.num_of_layers = len(cfg.MODEL.SHAPE)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
+        self.leaky_slope = cfg.
 
         # Initialise the weights to randomly sampled
         self.ws = []
@@ -32,6 +33,7 @@ class MultiLayerModel():
         self.activations = [None for i in range(len(self.ws))]
 
     def init_weights(self, w_shape):
+        #Xavier is the recommended weight initialization method for sigmoid and tanh activation function
         improved = np.random.uniform(-1, 1, w_shape)
         # if self.use_improved_weight_init:
         #     improved *= np.sqrt(1/w_shape[0])
@@ -54,6 +56,54 @@ class MultiLayerModel():
         part = np.sum(z_exp, axis = 1, keepdims = True)
         soft_max_var = z_exp/part
         return soft_max_var
+
+# TODO: use it in backprop when softmax    
+    def cross_entropy_loss(targets: np.ndarray, outputs: np.ndarray):
+        assert targets.shape == outputs.shape,\
+            f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
+
+        # C(w) = −1/N * N∑n=1 K∑k=1 targets * ln(outputs)
+        # We need to sum over klasses and batches, but divide just by batches
+        ce = - np.sum(targets * (np.log(outputs))) / targets.shape[0]
+
+        return ce
+
+    def forward_activation(self, z, func:str = "identity") -> np.ndarray:
+        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', leaky_relu}, default='identity'"""
+        if func == "identity":
+            return z
+        if func == "sigmoid":
+            return self.sigmoid(z)
+        elif func == "tanh":
+            return np.tanh(z)
+        elif func == "relu":
+            return np.maximum(0, z)
+        elif func == "leaky_relu":
+            return np.maximum(self.leaky_slope * z, z)
+        elif func == "softmax":
+            return self.soft_max(z)
+        else:
+            raise ValueError(func, " not found in activation functions")
+      
+    def grad_activation(self, z, func:str = "identity") -> np.ndarray:
+        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', leaky_relu}, default='identity'"""
+        if func == "identity":
+            return z
+        elif func == "sigmoid":
+            return self.sigmoid_prime(z)
+        elif func == "tanh":
+            return (1 - np.square(z))
+        elif func == "relu":
+            return 1.0 * (z > 0)
+        elif func == "leaky_relu":
+            d=np.zeros_like(z)
+            d[z <= 0] = self.leaky_slope
+            d[z > 0] = 1
+            return d
+        elif func == "softmax":
+            raise NotImplementedError("softmax in gradactivation")
+        else:
+            raise ValueError(func, " not found in activation functions")
 
     def forward(self, X_data: np.ndarray) -> np.ndarray:
         self.activations[0] = X_data

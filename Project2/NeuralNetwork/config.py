@@ -53,6 +53,8 @@ class Config(object):
         _cfg.MODEL = CN()
         _cfg.MODEL.LINEAR = True
         _cfg.MODEL.SHAPE = [10, 1] # For linear model the last layer will be overwritten to have 1 neuron
+        _cfg.MODEL.ACTIVATION_FUNCTIONS = ["sigmoid", "identity"]
+        _cfg.MODEL.LEAKY_SLOPE = 0.1 # Is used only if activation function is "leaky_relu"
 
         # scheduler: Callable[[float, float, float], float] = None
 
@@ -64,11 +66,18 @@ class Config(object):
         _cfg.OUTPUT_DIR = "test_multilayer_model"  # folder inside checkpoints
 
         _cfg.DATA = CN()
+        _cfg.DATA.NAME = "franke" # {"franke", "mnist"}
         # Settings for Frankie data
         _cfg.DATA.FRANKIE = CN()
         _cfg.DATA.FRANKIE.N = 100
         _cfg.DATA.FRANKIE.NOISE = 0.1
         _cfg.DATA.FRANKIE.P = 5
+
+        # Settings for MNIST data
+        _cfg.DATA.MNIST = CN()
+        _cfg.DATA.MNIST.VAL_PERCENT = 0.2
+
+        
 
         # Override parameter values from YAML file first, then from override list.
         self._cfg = _cfg
