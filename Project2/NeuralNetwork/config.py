@@ -48,10 +48,11 @@ class Config(object):
         _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off
         _cfg.OPTIM.EARLY_STOP_LR_STEP = -1.0 #1e-5 # -1 to turn it off
         _cfg.OPTIM.LR_DECAY = 0.0 # 0 to turn it off
+        _cfg.OPTIM.MOMENTUM = 0.0 # 0 to turn it off
 
         _cfg.MODEL = CN()
         _cfg.MODEL.LINEAR = True
-        _cfg.MODEL.SHAPE = [10, -1] # Last layer for linear model will be overwritten to be as input
+        _cfg.MODEL.SHAPE = [10, 1] # For linear model the last layer will be overwritten to have 1 neuron
 
         # scheduler: Callable[[float, float, float], float] = None
 
@@ -67,7 +68,7 @@ class Config(object):
         _cfg.DATA.FRANKIE = CN()
         _cfg.DATA.FRANKIE.N = 100
         _cfg.DATA.FRANKIE.NOISE = 0.1
-        _cfg.DATA.FRANKIE.P = 2
+        _cfg.DATA.FRANKIE.P = 5
 
         # Override parameter values from YAML file first, then from override list.
         self._cfg = _cfg

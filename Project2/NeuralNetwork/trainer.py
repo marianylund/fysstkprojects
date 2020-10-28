@@ -104,7 +104,6 @@ class Trainer():
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,
-                        "Shape": model.shape
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=1)
 
@@ -114,7 +113,6 @@ class Trainer():
                         "Train_mse": train_mse,
                         "Train_r2": train_r2,
                         "Learning_rate": learning_rate_all,
-                        "Shape": model.shape
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=1)
 
