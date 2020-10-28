@@ -39,6 +39,7 @@ class Config(object):
         _cfg.SEED = 2018
         _cfg.SAVE_FIG = False
         _cfg.TEST_SIZE = 0.2
+        _cfg.SHUFFLE = False
 
         _cfg.OPTIM = CN()
         _cfg.OPTIM.NUM_EPOCHS = 100
@@ -48,6 +49,10 @@ class Config(object):
         _cfg.OPTIM.EARLY_STOP_LR_STEP = -1.0 #1e-5 # -1 to turn it off
         _cfg.OPTIM.LR_DECAY = 0.0 # 0 to turn it off
 
+        _cfg.MODEL = CN()
+        _cfg.MODEL.LINEAR = True
+        _cfg.MODEL.SHAPE = [-1] # Last layer for linear model will be overwritten to be as input
+
         # scheduler: Callable[[float, float, float], float] = None
 
         # test options
@@ -55,7 +60,7 @@ class Config(object):
         _cfg.MODEL_SAVE_STEP = 500 # Save checkpoint every save_step
         #_cfg.LOG_STEP = 10 # Print logs every log_stepPrint logs every log_step
 
-        _cfg.OUTPUT_DIR = "test_sdg"  # folder inside checkpoints
+        _cfg.OUTPUT_DIR = "test_multilayer_model"  # folder inside checkpoints
 
         _cfg.DATA = CN()
         # Settings for Frankie data
