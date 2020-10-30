@@ -4,18 +4,20 @@ DATA:
     NOISE: 0.1
     P: 2
   MNIST:
+    BINARY:
+    - 2
+    - 3
     VAL_PERCENT: 0.2
-  NAME: franke
+  NAME: mnist
 MODEL:
   ACTIVATION_FUNCTIONS:
   - sigmoid
-  - identity
-  COST_FUNCTION: mse
-  LEAKY_SLOPE: 0.1
-  SHAPE:
+  - softmax
+  COST_FUNCTION: ce
+  HIDDEN_LAYERS:
   - 10
-  - 1
-  WEIGHT_INIT: random
+  LEAKY_SLOPE: 0.1
+  WEIGHT_INIT: xavier
 MODEL_SAVE_STEP: 500
 OPTIM:
   BATCH_SIZE: 20
@@ -23,10 +25,11 @@ OPTIM:
   L2_REG_LAMBDA: 1.0
   LR: 0.001
   LR_DECAY: 0.0
-  MOMENTUM: 1.0
+  MOMENTUM: 0.9
   NUM_EPOCHS: 1
+  USE_MOMENTUM: false
 OUTPUT_DIR: test_data_loader
 SAVE_FIG: false
 SEED: 2018
-SHUFFLE: false
+SHUFFLE: true
 TEST_SIZE: 0.2

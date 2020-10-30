@@ -39,7 +39,7 @@ class Config(object):
         _cfg.SEED = 2018
         _cfg.SAVE_FIG = False
         _cfg.TEST_SIZE = 0.2
-        _cfg.SHUFFLE = False
+        _cfg.SHUFFLE = True
 
         _cfg.OPTIM = CN()
         _cfg.OPTIM.NUM_EPOCHS = 1
@@ -52,7 +52,7 @@ class Config(object):
         _cfg.OPTIM.MOMENTUM = 0.9 # if 1 then no friction, used only if USE_MOMENTUM is true
 
         _cfg.MODEL = CN()
-        _cfg.MODEL.SHAPE = [10, 1] # For linear model the last layer should be 1
+        _cfg.MODEL.HIDDEN_LAYERS = [10] # the last layer will be added based on the data
         _cfg.MODEL.ACTIVATION_FUNCTIONS = ["sigmoid", "identity"] # {'identity', 'sigmoid', 'tanh', 'relu', 'leaky_relu'}
         _cfg.MODEL.LEAKY_SLOPE = 0.1 # Is used only if activation function is "leaky_relu"
         _cfg.MODEL.COST_FUNCTION = "mse" # {'mse', 'ce'}
@@ -78,6 +78,7 @@ class Config(object):
         # Settings for MNIST data
         _cfg.DATA.MNIST = CN()
         _cfg.DATA.MNIST.VAL_PERCENT = 0.2
+        _cfg.DATA.MNIST.BINARY = [2, 3] # leave empty to have all classes
 
         # Override parameter values from YAML file first, then from override list.
         self._cfg = _cfg

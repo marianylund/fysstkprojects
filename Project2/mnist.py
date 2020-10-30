@@ -13,7 +13,7 @@ filename = [
     ["training_labels", "train-labels-idx1-ubyte.gz"],
     ["test_labels", "t10k-labels-idx1-ubyte.gz"]
 ]
-SAVE_PATH = pathlib.Path("data")
+SAVE_PATH = pathlib.Path("DataFiles")
 
 
 def download_mnist():

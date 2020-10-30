@@ -12,8 +12,9 @@ from RegLib.RegressionMethod import RegressionType
 from RegLib.HelperFunctions import confidence_interval, create_frankie_data, create_X
 from RegLib.load_save_data import *
 from PROJECT_SETUP import SEED, CHECKPOINTS_DIR
-from NeuralNetwork.configs.default import *
-from NeuralNetwork.trainer import train_sgd
+from NeuralNetwork.config import Config
+from NeuralNetwork.trainer import Trainer
+from NeuralNetwork.MultiLayerModel import MultiLayerModel
 
 error_tolerance = 1e-10
 
@@ -77,13 +78,25 @@ def test_classification_softmax_scikit():
 def test_sgd(X, y):
     return
     #train_sgd(cfg, X, y)
+
+def test_accuracy():
+    y_data = np.ndarray([[0, 0, 1, 0]])
+    y_pred = np.ndarray([[1, 0, 0, 0]])
+    acc = MultiLayerModel.calculate_accuracy(y_data, y_pred)
+    assert acc == 0, acc
+
+    acc = MultiLayerModel.calculate_accuracy(y_data, y_data)
+    assert acc == 1, acc
+
+    
     
 
 if __name__ == "__main__":
     print("Start tests for project 2")
-    X, z = create_test_data()
+    #X, z = create_test_data()
     #test_saving_and_loading_model(X, z)
     #test_regression_learning_scikit(X, z)
-    test_sgd(X, z)
+    #test_sgd(X, z)
+    test_accuracy()
 
     print("All tests have passed")

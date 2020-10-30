@@ -2,16 +2,17 @@
 import numpy as np
 import typing
 from yacs.config import CfgNode as CN
+from sklearn.metrics import confusion_matrix
 
 class MultiLayerModel():
-    def __init__(self, cfg:CN, input_nodes:int):
-        # neurons_per_layer: typing.List[int], input_nodes:int, l2_reg_lambda: float = 1.0, linear = True
+    def __init__(self, cfg:CN, input_nodes:int, output_nodes:int):
         self.I = input_nodes
-        self.neurons_per_layer = cfg.MODEL.SHAPE
+        self.neurons_per_layer = cfg.MODEL.HIDDEN_LAYERS + [output_nodes]
+        print("Neurons: ", self.neurons_per_layer, " output_nodes: ", output_nodes)
         self.activation_functions = cfg.MODEL.ACTIVATION_FUNCTIONS
         self.cost_function = cfg.MODEL.COST_FUNCTION
         self.shape = [input_nodes] + self.neurons_per_layer
-        self.num_of_layers = len(cfg.MODEL.SHAPE)
+        self.num_of_layers = len(self.neurons_per_layer)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
         self.leaky_slope = cfg.MODEL.LEAKY_SLOPE
         self.weight_init = cfg.MODEL.WEIGHT_INIT
@@ -163,3 +164,34 @@ class MultiLayerModel():
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
+
+    def get_evaluation(self, y_data: np.ndarray, y_pred: np.ndarray) -> float:
+        if self.activation_functions[-1] == "softmax":
+            return MultiLayerModel.calculate_accuracy(y_data, y_pred)
+        else:
+            return self.MSE(y_data, y_pred)
+
+    def MSE(self, y_data, y_pred):
+        return np.mean((y_data - y_pred)**2)
+
+    @staticmethod
+    def calculate_accuracy(y_data: np.ndarray, y_pred: np.ndarray) -> float:
+        if(y_data.shape[1] > 1): # multiclass 
+            correct = 0
+            for i in range(y_pred.shape[0]):
+                if np.argmax(y_pred[i]) == np.argmax(y_data[i]):
+                    correct += 1
+            correct_acc = correct/y_pred.shape[0]
+            #print("correct_acc: ", correct_acc)
+            return correct_acc
+        else: # binary
+            y_data = y_data.ravel()
+            y_pred = y_pred.ravel()
+            tn, fp, fn, tp = confusion_matrix(y_data, y_pred).ravel()
+            #print("tn, fp, fn, tp: ", (tn, fp, fn, tp))
+            accuracy = (tp + tn) / (tp + tn + fp + fn)
+            return accuracy
+            #precision = tp / (tp + fp)
+            #recall = tp / (tp + fn)
+            #print("accuracy: ", accuracy, "precision: ", precision, "recall: ", recall)
+        

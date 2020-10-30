@@ -32,13 +32,17 @@ class DataLoader():
 
     def load_mnist_data(self, cfg: CN):
         val_percent = cfg.DATA.MNIST.VAL_PERCENT
-        X_train, y_train, X_val, y_val, X_test, y_test = load_full_mnist(
-        val_percent)
-
-        # One hot encode the results
-        self.y_train = self.one_hot_encode(y_train, 10)
-        self.y_val = self.one_hot_encode(y_val, 10)
-        self.y_test = self.one_hot_encode(y_test, 10)
+        binary_classes = cfg.DATA.MNIST.BINARY
+        num_of_classes = len(binary_classes)
+        if(num_of_classes != 0):
+            assert num_of_classes == 2, "Cannot have " + str(num_of_classes) + " classes"
+            X_train, self.y_train, X_val, self.y_val, X_test, self.y_test = load_binary_dataset(binary_classes[0], binary_classes[1], val_percent)
+        else:
+            X_train, y_train, X_val, y_val, X_test, y_test = load_full_mnist(val_percent)
+            # One hot encode the results
+            self.y_train = self.one_hot_encode(y_train, 10)
+            self.y_val = self.one_hot_encode(y_val, 10)
+            self.y_test = self.one_hot_encode(y_test, 10)
 
         # Pre-process the batch
         X_mean, X_std = (np.mean(X_train), np.std(X_train))

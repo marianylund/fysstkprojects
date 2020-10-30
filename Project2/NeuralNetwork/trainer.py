@@ -17,7 +17,8 @@ from yacs.config import CfgNode as CN
 
 class Trainer():
     def train_and_test(self, cfg:CN, data_loader:DataLoader, checkpoints_path:Path = None):
-        self.model = MultiLayerModel(cfg, data_loader.X_train.shape[1]) # here it was X.shape[1]
+        print("data_loader.y_train.shape: ", data_loader.y_train.shape)
+        self.model = MultiLayerModel(cfg, data_loader.X_train.shape[1], data_loader.y_train.shape[1]) # here it was X.shape[1]
         if(checkpoints_path == None):
             checkpoints_path = Path.cwd()
         self.train(cfg, self.model, data_loader.X_train, data_loader.X_test, data_loader.y_train, data_loader.y_test, checkpoints_path)
@@ -48,11 +49,11 @@ class Trainer():
             velocity = [0 for i in range(len(model.ws))]
             momentum_gamma = cfg.OPTIM.MOMENTUM
 
-        train_mse = {}
+        train_eval = {}
         learning_rate_all = {}
         train_r2 = {}
-        
-        best_mse = inf # 0 is best
+        use_accuracy = cfg.MODEL.ACTIVATION_FUNCTIONS[-1] == "softmax"
+        best_eval = inf * (-1 * use_accuracy) # 1 is best for accuracy, 0 for MSE
 
         global_step = 0
         total_steps = cfg.OPTIM.NUM_EPOCHS * num_batches_per_epoch
@@ -67,7 +68,7 @@ class Trainer():
                 s = np.arange(X_train.shape[0])
                 np.random.shuffle(s)
                 X_train = X_train[s]
-                Y_train = Y_train[s]
+                y_train = y_train[s]
 
             for step in range(num_batches_per_epoch):
                 progressBar(global_step, total_steps)
@@ -81,7 +82,6 @@ class Trainer():
                 y_pred = model.forward(X_batch)
                 model.backward(y_pred, y_batch)
 
-
                 # Update the weights
                 _lr_step = np.multiply(model.grads, _lr)
                 if(use_momentum):
@@ -91,21 +91,21 @@ class Trainer():
                     model.ws = model.ws - _lr_step
                 
                 # Compute the cost
-                _mse = SGD.MSE(y_batch, y_pred)
-                train_mse[global_step] = _mse
+                _eval = model.get_evaluation(y_batch, y_pred)
+                train_eval[global_step] = _eval
 
                 train_r2[global_step] = SGD.R2(y_batch, y_pred)
                 learning_rate_all[global_step] = _lr
 
-                if _mse < best_mse: # Save best model
-                    best_mse = _mse
+                if (not use_accuracy and _eval < best_eval) or (use_accuracy and _eval > best_eval): # Save best model
+                    best_eval = _eval
                     test_pred = model.forward(X_test)
-                    self.best_test_mse = SGD.MSE(y_test, test_pred)
+                    self.best_test_eval = model.get_evaluation(y_test, test_pred)
                     state_dict = {
                         "Step": global_step,
-                        "Test_mse": self.best_test_mse,
+                        "Test_eval": self.best_test_eval,
                         "Test_r2": SGD.R2(y_test, test_pred),
-                        "Train_mse": train_mse,
+                        "Train_eval": train_eval,
                         "Train_r2": train_r2,
                         "Weights": model.ws.tolist(),
                         "Learning_rate": learning_rate_all,
@@ -114,7 +114,7 @@ class Trainer():
 
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
                     state_dict = {
-                        "Train_mse": train_mse,
+                        "Train_eval": train_eval,
                         "Train_r2": train_r2,
                         "Weights": model.ws.tolist(),
                         "Learning_rate": learning_rate_all,
