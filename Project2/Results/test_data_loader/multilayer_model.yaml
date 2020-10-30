@@ -15,6 +15,7 @@ MODEL:
   SHAPE:
   - 10
   - 1
+  WEIGHT_INIT: random
 MODEL_SAVE_STEP: 500
 OPTIM:
   BATCH_SIZE: 20
@@ -22,7 +23,7 @@ OPTIM:
   L2_REG_LAMBDA: 1.0
   LR: 0.001
   LR_DECAY: 0.0
-  MOMENTUM: 0.0
+  MOMENTUM: 1.0
   NUM_EPOCHS: 1
 OUTPUT_DIR: test_data_loader
 SAVE_FIG: false

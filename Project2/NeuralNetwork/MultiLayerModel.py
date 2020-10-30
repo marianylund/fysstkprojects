@@ -14,6 +14,7 @@ class MultiLayerModel():
         self.num_of_layers = len(cfg.MODEL.SHAPE)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
         self.leaky_slope = cfg.MODEL.LEAKY_SLOPE
+        self.weight_init = cfg.MODEL.WEIGHT_INIT
 
         self.check_config()
 
@@ -37,11 +38,21 @@ class MultiLayerModel():
         assert len(self.neurons_per_layer) == len(self.activation_functions), " the number of layers and activations is not equal: " + str(len(self.neurons_per_layer)) + " " + str(len(self.activation_functions))
 
     def init_weights(self, w_shape):
+        """{'random', 'he', 'xavier', 'zeros'}, default: 'random'"""
         #Xavier is the recommended weight initialization method for sigmoid and tanh activation function
-        improved = np.random.uniform(-1, 1, w_shape)
-        # if self.use_improved_weight_init:
-        #     improved *= np.sqrt(1/w_shape[0])
-        return improved
+        if self.weight_init == "zeros":
+            return np.zeros(w_shape)
+
+        weights = np.random.uniform(-1, 1, w_shape)
+        if self.weight_init == "random":
+            return weights
+        elif self.weight_init == "he":
+            weights *= np.sqrt(2/w_shape[0])
+        elif self.weight_init == "xavier":
+            weights *= np.sqrt(1/w_shape[0])
+        else:
+            print("Did not find weight init type: ", self.weight_init)
+        return weights
 
     def zero_grad(self) -> None:
         self.grads = [None for i in range(len(self.ws))]
@@ -75,6 +86,7 @@ class MultiLayerModel():
         ce = - np.sum(targets * (np.log(outputs))) / targets.shape[0]
         return ce
 
+    # https://towardsdatascience.com/implementing-different-activation-functions-and-weight-initialization-methods-using-python-c78643b9f20f
     def forward_activation(self, z, func:str = "identity") -> np.ndarray:
         """{'identity', 'sigmoid', 'tanh', 'relu', 'softmax', 'leaky_relu'}, default='identity'"""
         if func == "identity":

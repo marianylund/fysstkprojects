@@ -48,13 +48,15 @@ class Config(object):
         _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off
         _cfg.OPTIM.EARLY_STOP_LR_STEP = -1.0 #1e-5 # -1 to turn it off
         _cfg.OPTIM.LR_DECAY = 0.0 # 0 to turn it off
-        _cfg.OPTIM.MOMENTUM = 0.0 # 0 to turn it off
+        _cfg.OPTIM.USE_MOMENTUM = False 
+        _cfg.OPTIM.MOMENTUM = 0.9 # if 1 then no friction, used only if USE_MOMENTUM is true
 
         _cfg.MODEL = CN()
         _cfg.MODEL.SHAPE = [10, 1] # For linear model the last layer should be 1
         _cfg.MODEL.ACTIVATION_FUNCTIONS = ["sigmoid", "identity"] # {'identity', 'sigmoid', 'tanh', 'relu', 'leaky_relu'}
-        _cfg.MODEL.COST_FUNCTION = "mse" # {'mse', 'ce'}
         _cfg.MODEL.LEAKY_SLOPE = 0.1 # Is used only if activation function is "leaky_relu"
+        _cfg.MODEL.COST_FUNCTION = "mse" # {'mse', 'ce'}
+        _cfg.MODEL.WEIGHT_INIT = "random" # {'random', 'he', 'xavier', 'zeros'}
 
         # scheduler: Callable[[float, float, float], float] = None
 

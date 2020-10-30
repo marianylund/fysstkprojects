@@ -43,6 +43,10 @@ class Trainer():
         learning_rate = cfg.OPTIM.LR
         decay = cfg.OPTIM.LR_DECAY
         use_shuffle = cfg.SHUFFLE
+        use_momentum = cfg.OPTIM.USE_MOMENTUM
+        if use_momentum:
+            velocity = [0 for i in range(len(model.ws))]
+            momentum_gamma = cfg.OPTIM.MOMENTUM
 
         train_mse = {}
         learning_rate_all = {}
@@ -79,11 +83,12 @@ class Trainer():
 
 
                 # Update the weights
-                # if(use_momentum):
-                #   velocity = np.multiply(velocity, (momentum_gamma - model.grads))
-                #   model.ws = model.ws + velocity
                 _lr_step = np.multiply(model.grads, _lr)
-                model.ws = model.ws - _lr_step
+                if(use_momentum):
+                    velocity = np.multiply(velocity, momentum_gamma) - _lr_step
+                    model.ws = model.ws + velocity
+                else:
+                    model.ws = model.ws - _lr_step
                 
                 # Compute the cost
                 _mse = SGD.MSE(y_batch, y_pred)
