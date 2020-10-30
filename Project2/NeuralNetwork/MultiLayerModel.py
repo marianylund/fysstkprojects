@@ -7,18 +7,15 @@ class MultiLayerModel():
     def __init__(self, cfg:CN, input_nodes:int):
         # neurons_per_layer: typing.List[int], input_nodes:int, l2_reg_lambda: float = 1.0, linear = True
         self.I = input_nodes
-        self.linear = cfg.MODEL.LINEAR # false if classification
         self.neurons_per_layer = cfg.MODEL.SHAPE
         self.activation_functions = cfg.MODEL.ACTIVATION_FUNCTIONS
-        assert len(self.neurons_per_layer) == len(self.activation_functions), " the number of layers and activations is not equal: " + str(len(self.neurons_per_layer)) + " " + str(len(self.activation_functions))
-        if self.linear:
-            self.neurons_per_layer[-1] = 1 # if it is linear, input will be equal the output
-            assert self.activation_functions[-1] != "softmax", " if the model is linear, the last activation function should not be softmax"
-
+        self.cost_function = cfg.MODEL.COST_FUNCTION
         self.shape = [input_nodes] + self.neurons_per_layer
         self.num_of_layers = len(cfg.MODEL.SHAPE)
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
         self.leaky_slope = cfg.MODEL.LEAKY_SLOPE
+
+        self.check_config()
 
         # Initialise the weights to randomly sampled
         self.ws = []
@@ -36,6 +33,9 @@ class MultiLayerModel():
         self.zs = [None for i in range(len(self.ws))]
         self.activations = [None for i in range(len(self.ws))]
 
+    def check_config(self):
+        assert len(self.neurons_per_layer) == len(self.activation_functions), " the number of layers and activations is not equal: " + str(len(self.neurons_per_layer)) + " " + str(len(self.activation_functions))
+
     def init_weights(self, w_shape):
         #Xavier is the recommended weight initialization method for sigmoid and tanh activation function
         improved = np.random.uniform(-1, 1, w_shape)
@@ -52,8 +52,13 @@ class MultiLayerModel():
     def sigmoid_prime(self, z):
             return self.sigmoid(z) * (1 - self.sigmoid(z))
     
-    def cost_derivative(self, targets, outputs):
-        return -(targets - outputs)
+    def cost_derivative(self, activation, output_error, N):
+        if self.cost_function == "mse":
+            return 2 * activation.T @ output_error
+        elif self.cost_function == "ce":
+            return np.dot(activation.T, output_error) / N
+        else:
+            raise ValueError(self.cost_function, " not found in cost_derivative")
 
     def soft_max(self, x):
         z_exp = np.exp(x)
@@ -61,7 +66,6 @@ class MultiLayerModel():
         soft_max_var = z_exp/part
         return soft_max_var
 
-# TODO: use it in backprop when softmax    
     def cross_entropy_loss(self, targets: np.ndarray, outputs: np.ndarray):
         assert targets.shape == outputs.shape,\
             f"Targets shape: {targets.shape}, outputs: {outputs.shape}"
@@ -69,11 +73,10 @@ class MultiLayerModel():
         # C(w) = −1/N * N∑n=1 K∑k=1 targets * ln(outputs)
         # We need to sum over klasses and batches, but divide just by batches
         ce = - np.sum(targets * (np.log(outputs))) / targets.shape[0]
-
         return ce
 
     def forward_activation(self, z, func:str = "identity") -> np.ndarray:
-        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', 'leaky_relu'}, default='identity'"""
+        """{'identity', 'sigmoid', 'tanh', 'relu', 'softmax', 'leaky_relu'}, default='identity'"""
         if func == "identity":
             return z
         if func == "sigmoid":
@@ -90,7 +93,7 @@ class MultiLayerModel():
             raise ValueError(func, " not found in activation functions")
       
     def grad_activation(self, z, func:str = "identity") -> np.ndarray:
-        """{'identity', 'logistic', 'tanh', 'relu', 'softmax', 'leaky_relu'}, default='identity'"""
+        """{'identity', 'sigmoid', 'tanh', 'relu', 'leaky_relu'}, default='identity'"""
         if func == "identity":
             return z
         elif func == "sigmoid":
@@ -105,7 +108,7 @@ class MultiLayerModel():
             d[z > 0] = 1
             return d
         elif func == "softmax":
-            raise NotImplementedError("softmax in gradactivation")
+            raise ValueError("Softmax should not be used in middle layers")
         else:
             raise ValueError(func, " not found in activation functions")
 
@@ -121,10 +124,6 @@ class MultiLayerModel():
 
         # here use soft-max for the last layer if classification, but just identity if linear:
         return self.forward_activation(self.zs[last_layer], self.activation_functions[last_layer])
-        # if self.linear:
-        #     return np.asarray(self.zs[last_layer])
-        # else:
-        #     return self.soft_max(self.zs[last_layer])
 
     def backward(self, outputs: np.ndarray,
                  targets: np.ndarray) -> None:
@@ -132,9 +131,9 @@ class MultiLayerModel():
             f"Output shape: {outputs.shape}, targets: {targets.shape}"
 
         N = targets.shape[0]
-
-        output_error = self.cost_derivative(targets, outputs)
-        self.grads[-1] = np.dot(self.activations[-1].T, output_error) / N
+        output_error = outputs - targets
+        self.grads[-1] = self.cost_derivative(self.activations[-1], output_error, N)
+        #self.grads[-1] = np.dot(self.activations[-1].T, output_error) / N
         for l in range(2, self.num_of_layers + 1): # OBS no +1 in the book
 
             # with ndarrays for hadamart multiplication just use *
@@ -145,7 +144,7 @@ class MultiLayerModel():
             output_error = activation * delta_cost
             # backpropogate the error
             # δ = ((w of next layer )^T * δ of next layer) ⊙ σ′(z)
-            average_grad = np.dot(self.activations[-l].T, output_error) / N # OBS activations[-l-1] in book and no /N
+            average_grad = self.cost_derivative(self.activations[-l], output_error, N) # OBS activations[-l-1] in book and no /N
             # ηm∑xδx,l(ax,l−1)T Average gradient?
             self.grads[-l] = average_grad
 

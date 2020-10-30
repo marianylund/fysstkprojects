@@ -2,16 +2,16 @@ DATA:
   FRANKIE:
     N: 100
     NOISE: 0.1
-    P: 5
+    P: 2
   MNIST:
     VAL_PERCENT: 0.2
   NAME: franke
 MODEL:
   ACTIVATION_FUNCTIONS:
-  - tanh
+  - sigmoid
   - identity
+  COST_FUNCTION: mse
   LEAKY_SLOPE: 0.1
-  LINEAR: true
   SHAPE:
   - 10
   - 1
