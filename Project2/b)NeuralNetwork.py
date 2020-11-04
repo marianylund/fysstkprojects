@@ -1,9 +1,9 @@
-from NeuralNetwork.MultiLayerModel import MultiLayerModel
-from NeuralNetwork.trainer import Trainer
-from NeuralNetwork.dataloader import DataLoader
-from NeuralNetwork.SGD import SGD
+from nnreg.model import Model
+from nnreg.trainer import Trainer
+from nnreg.dataloader import DataLoader
+from nnreg.SGD import SGD
 from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
-from NeuralNetwork.config import Config
+from nnreg.config import Config
 from PROJECT_SETUP import ROJECT_ROOT_DIR
 from RegLib.load_save_data import load_best_checkpoint, write_json
 
@@ -47,7 +47,7 @@ def plot(best_data_dict):
     y2 = { "Learning_rate": list(best_data_dict["Learning_rate"].values())}
 
     steps = [x for x in range(best_data_dict["Step"] + 1)]
-    plot_values_with_two_y_axis(steps, values_to_plot, y2, title = "NeuralNetwork", save_fig = False)
+    plot_values_with_two_y_axis(steps, values_to_plot, y2, title = "nnreg", save_fig = False)
 
 data_loader = DataLoader(cfg)
 nn = train(cfg, data_loader, output_dir)

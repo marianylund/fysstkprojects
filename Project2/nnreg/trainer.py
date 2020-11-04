@@ -7,9 +7,9 @@ from time import time
 
 from RegLib.load_save_data import save_checkpoint
 from RegLib.HelperFunctions import progressBar
-from NeuralNetwork.MultiLayerModel import MultiLayerModel
-from NeuralNetwork.SGD import SGD
-from NeuralNetwork.dataloader import DataLoader
+from nnreg.model import Model
+from nnreg.SGD import SGD
+from nnreg.dataloader import DataLoader
 
 # Needed for types:
 from typing import Callable
@@ -18,7 +18,7 @@ from yacs.config import CfgNode as CN
 class Trainer():
     def train_and_test(self, cfg:CN, data_loader:DataLoader, checkpoints_path:Path = None):
         print("data_loader.y_train.shape: ", data_loader.y_train.shape)
-        self.model = MultiLayerModel(cfg, data_loader.X_train.shape[1], data_loader.y_train.shape[1]) # here it was X.shape[1]
+        self.model = Model(cfg, data_loader.X_train.shape[1], data_loader.y_train.shape[1]) # here it was X.shape[1]
         if(checkpoints_path == None):
             checkpoints_path = Path.cwd()
         self.train(cfg, self.model, data_loader.X_train, data_loader.X_test, data_loader.y_train, data_loader.y_test, checkpoints_path)

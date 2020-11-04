@@ -1,6 +1,6 @@
-from NeuralNetwork.SGD import SGD as SGD
+from nnreg.SGD import SGD as SGD
 from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
-from NeuralNetwork.config import Config
+from nnreg.config import Config
 from PROJECT_SETUP import ROJECT_ROOT_DIR
 from RegLib.load_save_data import load_best_checkpoint, write_json
 

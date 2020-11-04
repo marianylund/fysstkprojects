@@ -12,9 +12,9 @@ from RegLib.RegressionMethod import RegressionType
 from RegLib.HelperFunctions import confidence_interval, create_frankie_data, create_X
 from RegLib.load_save_data import *
 from PROJECT_SETUP import SEED, CHECKPOINTS_DIR
-from NeuralNetwork.config import Config
-from NeuralNetwork.trainer import Trainer
-from NeuralNetwork.MultiLayerModel import MultiLayerModel
+from nnreg.config import Config
+from nnreg.trainer import Trainer
+from nnreg.model import Model
 
 error_tolerance = 1e-10
 
@@ -82,10 +82,10 @@ def test_sgd(X, y):
 def test_accuracy():
     y_data = np.ndarray([[0, 0, 1, 0]])
     y_pred = np.ndarray([[1, 0, 0, 0]])
-    acc = MultiLayerModel.calculate_accuracy(y_data, y_pred)
+    acc = Model.calculate_accuracy(y_data, y_pred)
     assert acc == 0, acc
 
-    acc = MultiLayerModel.calculate_accuracy(y_data, y_data)
+    acc = Model.calculate_accuracy(y_data, y_data)
     assert acc == 1, acc
 
     

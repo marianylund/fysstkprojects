@@ -78,7 +78,7 @@ class Config(object):
         # Settings for MNIST data
         _cfg.DATA.MNIST = CN()
         _cfg.DATA.MNIST.VAL_PERCENT = 0.2
-        _cfg.DATA.MNIST.BINARY = [2, 3] # leave empty to have all classes
+        _cfg.DATA.MNIST.BINARY = [] # leave empty to have all classes
 
         # Override parameter values from YAML file first, then from override list.
         self._cfg = _cfg

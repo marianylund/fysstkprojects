@@ -4,7 +4,7 @@ import typing
 from yacs.config import CfgNode as CN
 from sklearn.metrics import confusion_matrix
 
-class MultiLayerModel():
+class Model():
     def __init__(self, cfg:CN, input_nodes:int, output_nodes:int):
         self.I = input_nodes
         self.neurons_per_layer = cfg.MODEL.HIDDEN_LAYERS + [output_nodes]
@@ -167,7 +167,7 @@ class MultiLayerModel():
 
     def get_evaluation(self, y_data: np.ndarray, y_pred: np.ndarray) -> float:
         if self.activation_functions[-1] == "softmax":
-            return MultiLayerModel.calculate_accuracy(y_data, y_pred)
+            return Model.calculate_accuracy(y_data, y_pred)
         else:
             return self.MSE(y_data, y_pred)
 

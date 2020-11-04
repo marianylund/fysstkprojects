@@ -4,20 +4,18 @@ DATA:
     NOISE: 0.1
     P: 2
   MNIST:
-    BINARY:
-    - 2
-    - 3
+    BINARY: []
     VAL_PERCENT: 0.2
   NAME: mnist
 MODEL:
   ACTIVATION_FUNCTIONS:
   - sigmoid
-  - softmax
+  - sigmoid
   COST_FUNCTION: ce
   HIDDEN_LAYERS:
   - 10
   LEAKY_SLOPE: 0.1
-  WEIGHT_INIT: xavier
+  WEIGHT_INIT: random
 MODEL_SAVE_STEP: 500
 OPTIM:
   BATCH_SIZE: 20
