@@ -42,7 +42,7 @@ class Config(object):
         _cfg.SHUFFLE = True
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 1
+        _cfg.OPTIM.NUM_EPOCHS = 10
         _cfg.OPTIM.BATCH_SIZE = 20
         _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off
@@ -57,13 +57,14 @@ class Config(object):
         _cfg.MODEL.LEAKY_SLOPE = 0.1 # Is used only if activation function is "leaky_relu"
         _cfg.MODEL.COST_FUNCTION = "mse" # {'mse', 'ce'}
         _cfg.MODEL.WEIGHT_INIT = "random" # {'random', 'he', 'xavier', 'zeros'}
+        _cfg.MODEL.EVAL_FUNC = "acc" # {'acc', 'mse'}
 
         # scheduler: Callable[[float, float, float], float] = None
 
         # test options
-        #_cfg.EVAL_STEP = -1 # Evaluate dataset every eval_step, disabled when eval_step < 0
+        _cfg.EVAL_STEP = 10 # Evaluate dataset every eval_step, disabled when eval_step < 0, checks for best model every eval step
         _cfg.MODEL_SAVE_STEP = 500 # Save checkpoint every save_step
-        #_cfg.LOG_STEP = 10 # Print logs every log_stepPrint logs every log_step
+        _cfg.LOG_STEP = 2 # Print logs every EVAL_STEP * LOG_STEP step, for example if eval_step = 10 and log_step = 2, so it will print every 20th step
 
         _cfg.OUTPUT_DIR = "test_data_loader"  # folder inside checkpoints
 
@@ -108,15 +109,8 @@ class Config(object):
         r"""
         Perform all validations to raise error if there are parameters with conflicting values.
         """
-        return True
-        # if self._C.MODEL.USE_CBS:
-        #     assert self._C.MODEL.EMBEDDING_SIZE == 300, "Word embeddings must be initialized with"
-        #     " fixed GloVe Embeddings (300 dim) for performing CBS decoding during inference. "
-        #     f"Found MODEL.EMBEDDING_SIZE as {self._C.MODEL.EMBEDDING_SIZE} instead."
-
-        # assert (
-        #     self._C.MODEL.MIN_CONSTRAINTS_TO_SATISFY <= self._C.DATA.CBS.MAX_GIVEN_CONSTRAINTS
-        # ), "Satisfying more constraints than maximum specified is not possible."
+        if self._cfg.MODEL.EVAL_FUNC == "acc":
+            assert self._cfg.DATA.NAME != "franke", "Cannot use accuracy evaluation function with franke data"
 
     def __getattr__(self, attr: str):
         return self._cfg.__getattr__(attr)

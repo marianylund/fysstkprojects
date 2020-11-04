@@ -288,8 +288,9 @@ def plot_test_train(polydegree, values_to_plot, debug = False):
     plt.legend()
     plt.show()
 
-def progressBar(current, total, barLength = 20):
+def progressBar(current, total, msg = "", barLength = 20):
     percent = float(current) * 100 / total
     arrow   = '-' * int(percent/100 * barLength - 1) + '>'
     spaces  = ' ' * (barLength - len(arrow))
-    print('Progress: [%s%s] %d %%' % (arrow, spaces, percent), end='\r')
+    progress_msg = 'Progress: [%s%s] %d %% ' % (arrow, spaces, percent) + msg
+    print(progress_msg, end='\r')
