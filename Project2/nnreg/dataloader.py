@@ -13,13 +13,13 @@ class DataLoader():
     Can also have X_val and y_val for other sets than franke, size depends on the the config
     """
 
-    def __init__(self, cfg: CN, perm_index = [-1]):
+    def __init__(self, cfg: CN, perm_index = [-1], one_hot_encode = True):
         self.data_name = cfg.DATA.NAME
 
         if self.data_name == "franke":
             self.load_franke_data(cfg, perm_index)
         elif self.data_name == "mnist":
-            self.load_mnist_data(cfg)
+            self.load_mnist_data(cfg, one_hot_encode)
         else:
             raise ValueError(self.data_name, " is not found in DataLoader init")
 
@@ -30,7 +30,7 @@ class DataLoader():
         self.split_and_scale_train_test(X, z, perm_index, test_size = cfg.TEST_SIZE)
         return self
 
-    def load_mnist_data(self, cfg: CN):
+    def load_mnist_data(self, cfg: CN, one_hot_encode = True):
         val_percent = cfg.DATA.MNIST.VAL_PERCENT
         binary_classes = cfg.DATA.MNIST.BINARY
         num_of_classes = len(binary_classes)
@@ -38,11 +38,12 @@ class DataLoader():
             assert num_of_classes == 2, "Cannot have " + str(num_of_classes) + " classes"
             X_train, self.y_train, X_val, self.y_val, X_test, self.y_test = load_binary_dataset(binary_classes[0], binary_classes[1], val_percent)
         else:
-            X_train, y_train, X_val, y_val, X_test, y_test = load_full_mnist(val_percent)
+            X_train, self.y_train, X_val, self.y_val, X_test, self.y_test = load_full_mnist(val_percent)
             # One hot encode the results
-            self.y_train = self.one_hot_encode(y_train, 10)
-            self.y_val = self.one_hot_encode(y_val, 10)
-            self.y_test = self.one_hot_encode(y_test, 10)
+            if one_hot_encode:
+                self.y_train = self.one_hot_encode(self.y_train, 10)
+                self.y_val = self.one_hot_encode(self.y_val, 10)
+                self.y_test = self.one_hot_encode(self.y_test, 10)
 
         # Pre-process the batch
         X_mean, X_std = (np.mean(X_train), np.std(X_train))
@@ -70,21 +71,25 @@ class DataLoader():
             X = X[perm_index]
             y = y[perm_index]
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
-        self.X_train, self.X_test = self.scale_standard(self.X_train, self.X_test)
+        self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(self.X_train, self.y_train, test_size=0.25, shuffle = False)
+        self.X_train, self.X_test, self.X_val = self.scale_standard(self.X_train, self.X_test, self.X_val)
         # Force the correct shape:
         self.y_test.shape = (self.y_test.shape[0], 1)
         self.y_train.shape = (self.y_train.shape[0], 1)
+        self.y_val.shape = (self.y_val.shape[0], 1)
         return self
     
-    def scale_standard(self, train_data, test_data):
+    def scale_standard(self, train_data, test_data, val_data):
         data_mean = np.mean(train_data[:,1:], axis = 0)
         data_std = np.std(train_data[:,1:], axis = 0)
         train_data_scaled = train_data
         test_data_scaled = test_data
+        val_data_scaled = val_data
         train_data_scaled[:,1:] = np.divide((train_data[:,1:] - data_mean), data_std)
         test_data_scaled[:,1:] = np.divide((test_data[:,1:] - data_mean), data_std)
+        val_data_scaled[:,1:] = np.divide((val_data[:,1:] - data_mean), data_std)
         
-        return train_data_scaled, test_data_scaled
+        return train_data_scaled, test_data_scaled, val_data_scaled
 
 
 # https://github.com/hukkelas/TDT4265-StarterCode/tree/master/assignment1
@@ -145,9 +150,9 @@ def load_binary_dataset(class1: int, class2: int, val_percentage: float):
     X_train, Y_train, X_val, Y_val = train_val_split(
         X_train, Y_train, val_percentage
     )
-    print(f"Train shape: X: {X_train.shape}, Y: {Y_train.shape}")
-    print(f"Validation shape: X: {X_val.shape}, Y: {Y_val.shape}")
-    print(f"Test shape: X: {X_test.shape}, Y: {Y_test.shape}")
+    # print(f"Train shape: X: {X_train.shape}, Y: {Y_train.shape}")
+    # print(f"Validation shape: X: {X_val.shape}, Y: {Y_val.shape}")
+    # print(f"Test shape: X: {X_test.shape}, Y: {Y_test.shape}")
 
     return X_train, Y_train, X_val, Y_val, X_test, Y_test
 
@@ -170,8 +175,8 @@ def load_full_mnist(val_percentage: float):
     X_train, Y_train, X_val, Y_val = train_val_split(
         X_train, Y_train, val_percentage
     )
-    print(f"Train shape: X: {X_train.shape}, Y: {Y_train.shape}")
-    print(f"Validation shape: X: {X_val.shape}, Y: {Y_val.shape}")
-    print(f"Test shape: X: {X_test.shape}, Y: {Y_test.shape}")
+    # print(f"Train shape: X: {X_train.shape}, Y: {Y_train.shape}")
+    # print(f"Validation shape: X: {X_val.shape}, Y: {Y_val.shape}")
+    # print(f"Test shape: X: {X_test.shape}, Y: {Y_test.shape}")
 
     return X_train, Y_train, X_val, Y_val, X_test, Y_test

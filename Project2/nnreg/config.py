@@ -42,7 +42,7 @@ class Config(object):
         _cfg.SHUFFLE = True
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 10
+        _cfg.OPTIM.NUM_EPOCHS = 2
         _cfg.OPTIM.BATCH_SIZE = 20
         _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off

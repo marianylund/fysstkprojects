@@ -7,15 +7,14 @@ DATA:
     BINARY: []
     VAL_PERCENT: 0.2
   NAME: mnist
-EVAL_STEP: -1
+EVAL_STEP: 10
 LOG_STEP: 2
 MODEL:
   ACTIVATION_FUNCTIONS:
-  - sigmoid
-  - sigmoid
+  - softmax
   COST_FUNCTION: ce
-  HIDDEN_LAYERS:
-  - 10
+  EVAL_FUNC: acc
+  HIDDEN_LAYERS: []
   LEAKY_SLOPE: 0.1
   WEIGHT_INIT: random
 MODEL_SAVE_STEP: 500
@@ -26,7 +25,7 @@ OPTIM:
   LR: 0.001
   LR_DECAY: 0.0
   MOMENTUM: 0.9
-  NUM_EPOCHS: 10
+  NUM_EPOCHS: 2
   USE_MOMENTUM: false
 OUTPUT_DIR: test_data_loader
 SAVE_FIG: false

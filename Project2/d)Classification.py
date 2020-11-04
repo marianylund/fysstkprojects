@@ -1,7 +1,6 @@
 from nnreg.model import Model
 from nnreg.trainer import Trainer
 from nnreg.dataloader import DataLoader
-from nnreg.SGD import SGD
 from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
 from nnreg.config import Config
 from PROJECT_SETUP import ROJECT_ROOT_DIR
@@ -25,9 +24,7 @@ cfg = Config(config_override = [
 output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
 def train(cfg, data: DataLoader, output_dir):
-    #cfg = Config(config_file = path_of_cfg, config_override = ["OPTIM.NUM_EPOCHS", 500])
     cfg.dump(output_dir.joinpath("classification_mnist_model.yaml"))
-
     return Trainer().train_and_test(cfg = cfg, data_loader = data, checkpoints_path = output_dir)
 
 # Compare to sklearn, is there a better function to compare to?:

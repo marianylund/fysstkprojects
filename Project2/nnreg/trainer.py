@@ -1,6 +1,4 @@
-# Lots of copy paste from SGD, maybe merge them somehow?
 import numpy as np
-from sklearn.model_selection import train_test_split
 from pathlib import Path
 from math import inf
 from time import time
@@ -8,7 +6,6 @@ from time import time
 from RegLib.load_save_data import save_checkpoint
 from RegLib.HelperFunctions import progressBar
 from nnreg.model import Model
-from nnreg.SGD import SGD
 from nnreg.dataloader import DataLoader
 
 # Needed for types:
@@ -23,18 +20,6 @@ class Trainer():
             checkpoints_path = Path.cwd()
         self.train(cfg, self.model, data_loader.X_train, data_loader.X_test, data_loader.X_val, data_loader.y_train, data_loader.y_test, data_loader.y_val, checkpoints_path)
         return self
-
-    def split_and_scale_train_test(self, X, y, perm_index = [-1], test_size  = 0.2):
-        assert X.shape[0] == y.shape[0], ("X.shape[0] and y.shape[0] needs to be the same length, but: " + str(X.shape[0]) + " != " + str(y.shape[0]))
-        if(len(perm_index) > 1):
-            X = X[perm_index]
-            y = y[perm_index]
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
-        self.X_train, self.X_test = SGD.scale_standard(self.X_train, self.X_test)
-        # Force the correct shape:
-        self.y_test.shape = (self.y_test.shape[0], 1)
-        self.y_train.shape = (self.y_train.shape[0], 1)
-        return self
     
     def train(self, cfg:CN, model, X_train:np.ndarray, X_test:np.ndarray, X_val:np.ndarray, y_train:np.ndarray, y_test:np.ndarray, y_val:np.ndarray,
                     checkpoints_path:Path):
@@ -46,7 +31,6 @@ class Trainer():
         use_shuffle = cfg.SHUFFLE
         eval_step = cfg.EVAL_STEP if cfg.EVAL_STEP > 1 else 1
         log_step = cfg.LOG_STEP * eval_step
-        print("Eval step: ", eval_step)
         use_momentum = cfg.OPTIM.USE_MOMENTUM
         if use_momentum:
             velocity = [0 for i in range(len(model.ws))]
@@ -56,17 +40,18 @@ class Trainer():
         val_eval = {}
         learning_rate_all = {}
         train_r2 = {}
-        use_accuracy = cfg.MODEL.ACTIVATION_FUNCTIONS[-1] == "softmax"
-        best_eval = inf * (-1 * use_accuracy) # 1 is best for accuracy, 0 for MSE
+        use_accuracy = cfg.MODEL.EVAL_FUNC == "acc"
+        best_eval = inf * (-1 if use_accuracy else 1) # 1 is best for accuracy, 0 for MSE
+        print("best_eval: " + str(best_eval))
 
         global_step = 0
         total_steps = cfg.OPTIM.NUM_EPOCHS * num_batches_per_epoch
 
-        start_time = time()
+        self.start_time = time()
         
         for epoch in range(cfg.OPTIM.NUM_EPOCHS):
 
-            _lr = SGD.learning_schedule(learning_rate, decay, epoch)
+            _lr = Trainer.learning_schedule(learning_rate, decay, epoch)
 
             if use_shuffle:
                 s = np.arange(X_train.shape[0])
@@ -98,7 +83,7 @@ class Trainer():
                     _eval_train = model.get_evaluation(y_batch, y_pred)
                     train_eval[global_step] = _eval_train
 
-                    train_r2[global_step] = SGD.R2(y_batch, y_pred)
+                    train_r2[global_step] = Trainer.R2(y_batch, y_pred)
                     learning_rate_all[global_step] = _lr
 
                     y_pred_val = model.forward(X_val)
@@ -113,8 +98,8 @@ class Trainer():
                         state_dict = {
                             "Step": global_step,
                             "Test_eval": self.best_test_eval,
-                            "Test_r2": SGD.R2(y_test, test_pred),
-                            "Proccess_time": time() - start_time,
+                            "Test_r2": Trainer.R2(y_test, test_pred),
+                            "Proccess_time": self.get_time(),
                             "Train_eval": train_eval,
                             "Train_r2": train_r2,
                             "Val_eval": val_eval,
@@ -131,16 +116,65 @@ class Trainer():
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=1)
                 
                 if( global_step % log_step == 0): # Time to log
-                    msg = "Step: " + str(global_step) + ", eval: " + str(train_eval[global_step])
+                    msg = "Step: " + str(global_step) + ", train_eval: " + str(train_eval[global_step])
                     progressBar(global_step, total_steps, msg)
                 
                 if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and abs(np.mean(_lr_step)) <= cfg.OPTIM.EARLY_STOP_LR_STEP):
-                    self.process_time = time() - start_time
-                    print(global_step, " step. Finished early: ", np.mean(_lr_step))
+                    m, s = self.get_time()
+                    print(f"{global_step} step. Finished early: {m:.0f}:{s:.0f}")
                     return self
 
                 global_step += 1
 
-        self.process_time = time() - start_time
-        print("Finished. Time: ", self.process_time)
+         # Compute the cost
+        _eval_train = model.get_evaluation(y_batch, y_pred)
+        train_eval[global_step] = _eval_train
+
+        train_r2[global_step] = Trainer.R2(y_batch, y_pred)
+        learning_rate_all[global_step] = _lr
+
+        y_pred_val = model.forward(X_val)
+
+        _eval = model.get_evaluation(y_val, y_pred_val)
+        val_eval[global_step] = _eval
+
+        if (not use_accuracy and _eval < best_eval) or (use_accuracy and _eval > best_eval): # Save best model
+            best_eval = _eval
+            test_pred = model.forward(X_test)
+            self.best_test_eval = model.get_evaluation(y_test, test_pred)
+            state_dict = {
+                "Step": global_step,
+                "Test_eval": self.best_test_eval,
+                "Test_r2": Trainer.R2(y_test, test_pred),
+                "Proccess_time": self.get_time(),
+                "Train_eval": train_eval,
+                "Train_r2": train_r2,
+                "Val_eval": val_eval,
+                "Weights": model.ws.tolist(),
+                "Learning_rate": learning_rate_all,
+            }
+            save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=True, max_keep=1)
+
+        m, s = self.get_time()
+        print(f"{global_step} step. Finished. Time: {m:.0f}:{s:.0f}")
         return self
+    
+    def get_time(self):
+        m, s = divmod(time() - self.start_time, 60)
+        return m, s
+
+    @staticmethod  
+    def is_increasing(a):
+        return np.all(np.diff(a) > 0)
+
+    @staticmethod
+    def learning_schedule(learning_rate:float, decay:float, epoch:float) -> float: 
+        return learning_rate * 1/(1 + decay * epoch)
+
+    @staticmethod
+    def R2(y_data, y_pred):
+        return 1 - np.sum((y_data - y_pred)**2) / np.sum((y_data - np.mean(y_data))**2)
+
+    @staticmethod
+    def MSE(y_data, y_pred):
+        return np.mean((y_data - y_pred)**2)

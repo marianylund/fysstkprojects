@@ -11,6 +11,7 @@ import seaborn as sns
 import os, sys
 import warnings
 from scipy.signal import savgol_filter
+from RegLib.load_save_data import load_best_checkpoint
 
 warnings.filterwarnings("ignore", message="Numba")
 
@@ -33,6 +34,13 @@ def create_X(x, y, n, debug = False):
     if debug:
         print("X.shape: ", X.shape)
     return X
+
+def get_best_dict(output_dir):
+    best_data_dict = load_best_checkpoint(output_dir)
+    assert best_data_dict != None, "No best data dictionary was found in: " + str(output_dir)
+    m, s = best_data_dict["Proccess_time"]
+    print(f'Best model. Step: {best_data_dict["Step"]}, eval: {best_data_dict["Test_eval"]:.2f}. Time: {m:.0f}:{s:.0f}')
+    return best_data_dict
 
 def image_path(fig_id, FIGURE_ID = "Results/FigureFiles"):
     return os.path.join(FIGURE_ID, fig_id)
@@ -75,7 +83,7 @@ def plot_3d_graph(x, y, z, title, z_title = "Z", dpi = 150, formatter = '%.02f',
     fig = plt.figure(dpi=dpi)
     ax = fig.gca(projection='3d')
     # Plot the surface.
-    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm, 
+    surf = ax.plot_surface(x, y, z, 
                         linewidth=0, antialiased=False)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -167,14 +175,14 @@ def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, tit
 
     ax2 = ax1.twinx()
 
-    color = 'tab:orange'
+    color = 'tab:green'
     ax2.set_ylabel(y2_label, color=color)
     ax2.set_yscale("log")
     for val in values_to_plot_y2:
         ax2.plot(steps, values_to_plot_y2[val], scatter_label, label=val, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
 
-    fig.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax1.legend()
 
     info_str, title_info = parse_info_for_plot(info_to_add)
     
@@ -195,7 +203,6 @@ def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTrad
     plt.style.use('seaborn-darkgrid')
     y1 = values_to_plot["Variance"]
     y2 = values_to_plot["Bias^2"]
-    y = np.vstack([y1, y2])
     labels = ["Variance", "Bias^2"]
     fig, ax = plt.subplots()
 

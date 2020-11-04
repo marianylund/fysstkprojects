@@ -46,8 +46,8 @@ def plot(best_data_dict):
     }
     y2 = { "Learning_rate": list(best_data_dict["Learning_rate"].values())}
 
-    steps = [x for x in range(best_data_dict["Step"] + 1)]
-    plot_values_with_two_y_axis(steps, values_to_plot, y2, title = "nnreg", save_fig = False)
+    steps = list(best_data_dict["Train_eval"].keys())
+    plot_values_with_two_y_axis(steps, values_to_plot, y2, y1_label = "Error", title = "nnreg", save_fig = False)
 
 data_loader = DataLoader(cfg)
 nn = train(cfg, data_loader, output_dir)

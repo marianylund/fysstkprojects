@@ -16,6 +16,7 @@ class Model():
         self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
         self.leaky_slope = cfg.MODEL.LEAKY_SLOPE
         self.weight_init = cfg.MODEL.WEIGHT_INIT
+        self.eval_func = cfg.MODEL.EVAL_FUNC
 
         self.check_config()
 
@@ -146,7 +147,6 @@ class Model():
         N = targets.shape[0]
         output_error = outputs - targets
         self.grads[-1] = self.cost_derivative(self.activations[-1], output_error, N)
-        #self.grads[-1] = np.dot(self.activations[-1].T, output_error) / N
         for l in range(2, self.num_of_layers + 1): # OBS no +1 in the book
 
             # with ndarrays for hadamart multiplication just use *
@@ -166,10 +166,12 @@ class Model():
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
 
     def get_evaluation(self, y_data: np.ndarray, y_pred: np.ndarray) -> float:
-        if self.activation_functions[-1] == "softmax":
+        if self.eval_func == "acc":
             return Model.calculate_accuracy(y_data, y_pred)
-        else:
+        elif self.eval_func == "mse":
             return self.MSE(y_data, y_pred)
+        else:
+            raise ValueError(self.eval_func, " not found in evaluation functions")
 
     def MSE(self, y_data, y_pred):
         return np.mean((y_data - y_pred)**2)
