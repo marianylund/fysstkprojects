@@ -42,7 +42,7 @@ class Trainer():
         train_r2 = {}
         use_accuracy = cfg.MODEL.EVAL_FUNC == "acc"
         best_eval = inf * (-1 if use_accuracy else 1) # 1 is best for accuracy, 0 for MSE
-        print("best_eval: " + str(best_eval))
+        best_eval_step = -1
 
         global_step = 0
         total_steps = cfg.OPTIM.NUM_EPOCHS * num_batches_per_epoch
@@ -92,6 +92,7 @@ class Trainer():
                     val_eval[global_step] = _eval
 
                     if (not use_accuracy and _eval < best_eval) or (use_accuracy and _eval > best_eval): # Save best model
+                        best_eval_step = global_step
                         best_eval = _eval
                         test_pred = model.forward(X_test)
                         self.best_test_eval = model.get_evaluation(y_test, test_pred)
@@ -116,12 +117,19 @@ class Trainer():
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=1)
                 
                 if( global_step % log_step == 0): # Time to log
-                    msg = "Step: " + str(global_step) + ", train_eval: " + str(train_eval[global_step])
+                    msg = "Step: " + str(global_step) + ", train_eval: " + str(train_eval[global_step]) + ", steps since last best: " + str(abs(global_step - best_eval_step))
                     progressBar(global_step, total_steps, msg)
                 
-                if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and abs(np.mean(_lr_step)) <= cfg.OPTIM.EARLY_STOP_LR_STEP):
+                if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and abs(global_step - best_eval_step) >= cfg.OPTIM.EARLY_STOP_LR_STEP):
                     m, s = self.get_time()
                     print(f"{global_step} step. Finished early: {m:.0f}:{s:.0f}")
+                    return self
+                
+                if((model.ws[0] == None).any()):
+                    m, s = self.get_time()
+                    print(f"{global_step} step. Finished early: {m:.0f}:{s:.0f}")
+                    print(f"ERROR: Weight are None, lr: {learning_rate}, batch_size {batch_size}, p: {cfg.DATA.FRANKIE.P}")
+
                     return self
 
                 global_step += 1

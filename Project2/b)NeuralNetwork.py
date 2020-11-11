@@ -1,7 +1,6 @@
 from nnreg.model import Model
 from nnreg.trainer import Trainer
 from nnreg.dataloader import DataLoader
-from nnreg.SGD import SGD
 from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
 from nnreg.config import Config
 from PROJECT_SETUP import ROJECT_ROOT_DIR

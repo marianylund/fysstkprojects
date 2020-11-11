@@ -162,7 +162,7 @@ def plot_values_with_info(polydegree, values_to_plot, title = "TestTrainErrorAsM
 
     plt.cla()
 
-def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, title = "SGD", xlabel = "Step", y1_label = "Prediction Error", y2_label = "Learning Rate", info_to_add = {}, xscale = "linear", save_fig = False, scatter = False):
+def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, title = "SGD", xlabel = "Step", y1_label = "Prediction Error", y2_label = "Learning Rate", info_to_add = {}, xscale = "linear", ylimit = None, save_fig = False, scatter = False):
     plt.style.use('seaborn-darkgrid')
     fig, ax1 = plt.subplots()
 
@@ -172,6 +172,9 @@ def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, tit
     ax1.set_ylabel(y1_label)
     for val in values_to_plot_y1:
         ax1.plot(steps, values_to_plot_y1[val], scatter_label, label=val)
+
+    if ylimit != None:
+        ax1.set_ylim(ylimit[0], ylimit[1])
 
     ax2 = ax1.twinx()
 

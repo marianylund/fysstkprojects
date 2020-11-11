@@ -13,7 +13,8 @@ class Model():
         self.cost_function = cfg.MODEL.COST_FUNCTION
         self.shape = [input_nodes] + self.neurons_per_layer
         self.num_of_layers = len(self.neurons_per_layer)
-        self.l2_reg_lambda = cfg.OPTIM.L2_REG_LAMBDA
+        self.reg = cfg.OPTIM.REGULARISATION
+        self.alpha = cfg.OPTIM.ALPHA
         self.leaky_slope = cfg.MODEL.LEAKY_SLOPE
         self.weight_init = cfg.MODEL.WEIGHT_INIT
         self.eval_func = cfg.MODEL.EVAL_FUNC
@@ -159,11 +160,22 @@ class Model():
             # δ = ((w of next layer )^T * δ of next layer) ⊙ σ′(z)
             average_grad = self.cost_derivative(self.activations[-l], output_error, N) # OBS activations[-l-1] in book and no /N
             # ηm∑xδx,l(ax,l−1)T Average gradient?
-            self.grads[-l] = average_grad
+            self.grads[-l] = average_grad + self.get_regularization(-l)
 
         for grad, w in zip(self.grads, self.ws):
             assert grad.shape == w.shape,\
                 f"Expected the same shape. Grad shape: {grad.shape}, w: {w.shape}."
+
+    def get_regularization(self, ind: int):
+        if self.reg == "none":
+            return 0
+        elif self.reg == "l1":
+            return self.alpha * self.ws[ind]
+        elif self.reg == "l2":
+            return self.alpha * 2 * self.ws[ind]
+        else:
+            raise ValueError(self.reg, " not found in regularization functions")
+    
 
     def get_evaluation(self, y_data: np.ndarray, y_pred: np.ndarray) -> float:
         if self.eval_func == "acc":

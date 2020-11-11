@@ -42,11 +42,12 @@ class Config(object):
         _cfg.SHUFFLE = True
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 2
-        _cfg.OPTIM.BATCH_SIZE = 20
-        _cfg.OPTIM.LR = 1e-3
-        _cfg.OPTIM.L2_REG_LAMBDA = 1.0 # 1.0 to turn it off
-        _cfg.OPTIM.EARLY_STOP_LR_STEP = -1.0 #1e-5 # -1 to turn it off
+        _cfg.OPTIM.NUM_EPOCHS = 10
+        _cfg.OPTIM.BATCH_SIZE = 120
+        _cfg.OPTIM.LR = 1e-2
+        _cfg.OPTIM.REGULARISATION = "none" # {none, l1, l2}
+        _cfg.OPTIM.ALPHA = 0.9 # 1.0 to turn it off
+        _cfg.OPTIM.EARLY_STOP_LR_STEP = 200 #1e-5 # -1 to turn it off, checks if the best model has been found only for that many steps
         _cfg.OPTIM.LR_DECAY = 0.0 # 0 to turn it off
         _cfg.OPTIM.USE_MOMENTUM = False 
         _cfg.OPTIM.MOMENTUM = 0.9 # if 1 then no friction, used only if USE_MOMENTUM is true
@@ -72,7 +73,7 @@ class Config(object):
         _cfg.DATA.NAME = "franke" # {"franke", "mnist"}
         # Settings for Frankie data
         _cfg.DATA.FRANKIE = CN()
-        _cfg.DATA.FRANKIE.N = 100
+        _cfg.DATA.FRANKIE.N = 1000
         _cfg.DATA.FRANKIE.NOISE = 0.1
         _cfg.DATA.FRANKIE.P = 2
 
