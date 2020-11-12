@@ -15,21 +15,6 @@ from sklearn.model_selection import ParameterGrid
 # For testing:
 from sklearn.linear_model  import LogisticRegression
 
-
-# Make sure that the configurations are fit for logisitc regression with MNIST
-
-activation_func = ["softmax"]
-cfg = Config(config_override = [
-    "MODEL.ACTIVATION_FUNCTIONS", activation_func,
-    "MODEL.COST_FUNCTION", "ce",
-    "DATA.NAME", "mnist",
-    "MODEL.HIDDEN_LAYERS", [], # No hidden layers as it is regression
-    "MODEL.EVAL_FUNC", "acc", # Compute accuracy
-    #"OUTPUT_DIR", "mnist_classification"
-    ])
-
-output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
-
 def train(cfg, data: DataLoader, output_dir):
     cfg.dump(output_dir.joinpath("logistic_reg_mnist.yaml"))
 
@@ -38,7 +23,7 @@ def train(cfg, data: DataLoader, output_dir):
 # Compare to sklearn, is there a better function to compare to?:
 def test(cfg, data: DataLoader, best_data_dict):
     logreg = LogisticRegression(penalty = 'l2', 
-                            C = cfg.OPTIM.L2_REG_LAMBDA,
+                            #C = cfg.OPTIM.L2_REG_LAMBDA,
                             fit_intercept = False,
                             solver = "sag",
                             max_iter=cfg.OPTIM.NUM_EPOCHS,
@@ -54,8 +39,25 @@ def plot(best_data_dict):
     }
     y2 = { "Learning_rate": list(best_data_dict["Learning_rate"].values())}
 
-    steps = list(best_data_dict["Train_eval"].keys())
+    steps = list(map(int, best_data_dict["Train_eval"].keys()))
     plot_values_with_two_y_axis(steps, values_to_plot, y2, y1_label = "Accuracy", title = "Logistic Regression on MNIST", save_fig = False)
+
+
+
+# Make sure that the configurations are fit for logisitc regression with MNIST
+
+activation_func = ["softmax"]
+cfg = Config(config_override = [
+    'OPTIM.BATCH_SIZE', 32,
+    "MODEL.ACTIVATION_FUNCTIONS", activation_func,
+    "MODEL.COST_FUNCTION", "ce",
+    "DATA.NAME", "mnist",
+    "MODEL.HIDDEN_LAYERS", [], # No hidden layers as it is regression
+    "MODEL.EVAL_FUNC", "acc", # Compute accuracy
+    "OUTPUT_DIR", "e)'Lo"
+    ])
+
+output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
 data_loader = DataLoader(cfg)
 train(cfg, data_loader, output_dir)
@@ -65,3 +67,9 @@ data_loader = DataLoader(cfg, one_hot_encode=False)
 test(cfg, data_loader, best_data_dict)
 
 #plot(best_data_dict)
+
+param_grid = {
+    #'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
+    'OPTIM.REGULARISATION': ["l2"],
+    'OPTIM.ALPHA': [0.1, 0.5, 0.9],
+}

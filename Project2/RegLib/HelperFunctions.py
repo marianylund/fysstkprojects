@@ -190,10 +190,10 @@ def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, tit
 
     info_str, title_info = parse_info_for_plot(info_to_add)
     
-    plt.title(title, loc='left', fontsize=12, fontweight=0)
+    plt.title(title, loc='left', fontsize=18, fontweight=0)
 
     if info_str != "":
-        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
+        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=12)
 
     plt.xscale(xscale)
     plt.tight_layout() 

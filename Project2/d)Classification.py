@@ -58,16 +58,20 @@ def plot(best_data_dict):
 # Make sure that the configurations are fit for classification with MNIST
 
 config_override = [
-    'OPTIM.BATCH_SIZE', 60,
+    'OPTIM.BATCH_SIZE', 32,
     'OPTIM.REGULARISATION', "none",
-    'OPTIM.NUM_EPOCHS', '20',
+    'OPTIM.NUM_EPOCHS', '30',
+    'OPTIM.LR', 1e-2, 
+    'OPTIM.EARLY_STOP_LR_STEP', 6000.0, 
     "MODEL.HIDDEN_LAYERS", [100, 20],
-    "MODEL.ACTIVATION_FUNCTIONS", ["sigmoid", "sigmoid", "softmax"],
+    "MODEL.ACTIVATION_FUNCTIONS", ["leaky_relu", "leaky_relu", "softmax"],
+    'MODEL.WEIGHT_INIT', 'xavier',
+    'MODEL.LEAKY_SLOPE',  0.1,
     "MODEL.EVAL_FUNC", "acc",
     "MODEL.COST_FUNCTION", "ce",
     "DATA.NAME", "mnist",
     "DATA.MNIST.BINARY", [], # all classes
-    "OUTPUT_DIR", "d)MNISTClass_LR_Batch_size"
+    "OUTPUT_DIR", "d)MNIST_Num_Of_Nodes"
 ]
 
 cfg = Config(config_override = config_override)
@@ -81,18 +85,24 @@ output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 # plot(best_data_dict)
 
 param_grid = {
-    'OPTIM.LR': [1e-2, 1e-3, 1e-4], 
-    'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
-    'OPTIM.BATCH_SIZE': [32, 60],
+    #'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
+    'OPTIM.REGULARISATION': ["l2"],
+    'OPTIM.ALPHA': [0.1, 0.5, 0.9],
 }
 
 
+# change OUTPUT DIR 
+param_grid = {
+    "MODEL.HIDDEN_LAYERS": [[200, 100, 20], [10, 200, 10]],
+    'MODEL.ACTIVATION_FUNCTIONS': [["tanh", "tanh", "leaky_relu", "softmax"], ["leaky_relu", "leaky_relu", "leaky_relu", "softmax"]],
+}
 
-#param_search(config_override, output_dir, param_grid, train, test)
+param_search(config_override, output_dir, param_grid, train, test)
+# Test with different number of layers and nodes
 
-#save_terminal_history(output_dir.joinpath("terminal_output"))
+# If have time test with just 2 classes
 
-# Analyse results
+
 
 
 
