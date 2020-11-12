@@ -81,6 +81,10 @@ def get_previous_checkpoints(directory: pathlib.Path) -> list:
 
     return [_.strip() for _ in ckpt_list]
 
+def get_previous_checkpoint_as_dict(directory: pathlib.Path) -> dict:
+    prev_check = directory.joinpath(get_previous_checkpoints(directory)[0])
+    return load_data_as_dict(prev_check)
+
 def load_best_checkpoint(directory: pathlib.Path) -> dict:
     filepath = directory.joinpath("best.json")
 

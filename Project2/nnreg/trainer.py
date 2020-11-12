@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from math import inf
+from math import inf, isnan
 from time import time
 
 from RegLib.load_save_data import save_checkpoint
@@ -111,26 +111,30 @@ class Trainer():
 
                 if( global_step % cfg.MODEL_SAVE_STEP == 0): # Time to save the model
                     state_dict = {
+                        "Proccess_time": self.get_time(),
                         "Weights": model.ws.tolist(),
                         "Learning_rate": learning_rate_all,
+                        "Train_eval": train_eval,
+                        "Val_eval": val_eval,
                     }
                     save_checkpoint(state_dict, checkpoints_path.joinpath(str(global_step)+".json"), is_best=False, max_keep=1)
                 
                 if( global_step % log_step == 0): # Time to log
-                    msg = "Step: " + str(global_step) + ", train_eval: " + str(train_eval[global_step]) + ", steps since last best: " + str(abs(global_step - best_eval_step))
+                    msg = f"Step: {global_step} train_eval: {train_eval[global_step]}, last best: {abs(global_step - best_eval_step)}"
                     progressBar(global_step, total_steps, msg)
+
+                    if(train_eval[global_step] == inf or isnan(train_eval[global_step])):
+                        m, s = self.get_time()
+                        print(f"Network failing, train eval is {train_eval[global_step]}, lr: {learning_rate}, batch_size {batch_size}, name: {cfg.OUTPUT_DIR}\n")
+
+                        return self
                 
                 if(cfg.OPTIM.EARLY_STOP_LR_STEP != -1 and abs(global_step - best_eval_step) >= cfg.OPTIM.EARLY_STOP_LR_STEP):
                     m, s = self.get_time()
-                    print(f"{global_step} step. Finished early: {m:.0f}:{s:.0f}")
+                    print(f"\n{global_step} step. Finished early: {m:.0f}:{s:.0f}")
                     return self
                 
-                if((model.ws[0] == None).any()):
-                    m, s = self.get_time()
-                    print(f"{global_step} step. Finished early: {m:.0f}:{s:.0f}")
-                    print(f"ERROR: Weight are None, lr: {learning_rate}, batch_size {batch_size}, p: {cfg.DATA.FRANKIE.P}")
-
-                    return self
+               
 
                 global_step += 1
 

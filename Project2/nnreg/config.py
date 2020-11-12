@@ -42,12 +42,12 @@ class Config(object):
         _cfg.SHUFFLE = True
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 10
+        _cfg.OPTIM.NUM_EPOCHS = 30
         _cfg.OPTIM.BATCH_SIZE = 120
-        _cfg.OPTIM.LR = 1e-2
+        _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.REGULARISATION = "none" # {none, l1, l2}
         _cfg.OPTIM.ALPHA = 0.9 # 1.0 to turn it off
-        _cfg.OPTIM.EARLY_STOP_LR_STEP = 200 #1e-5 # -1 to turn it off, checks if the best model has been found only for that many steps
+        _cfg.OPTIM.EARLY_STOP_LR_STEP = 2000.0 #1e-5 # -1 to turn it off, checks if the best model has been found only for that many steps
         _cfg.OPTIM.LR_DECAY = 0.0 # 0 to turn it off
         _cfg.OPTIM.USE_MOMENTUM = False 
         _cfg.OPTIM.MOMENTUM = 0.9 # if 1 then no friction, used only if USE_MOMENTUM is true
@@ -65,7 +65,7 @@ class Config(object):
         # test options
         _cfg.EVAL_STEP = 10 # Evaluate dataset every eval_step, disabled when eval_step < 0, checks for best model every eval step
         _cfg.MODEL_SAVE_STEP = 500 # Save checkpoint every save_step
-        _cfg.LOG_STEP = 2 # Print logs every EVAL_STEP * LOG_STEP step, for example if eval_step = 10 and log_step = 2, so it will print every 20th step
+        _cfg.LOG_STEP = 100 # Print logs every EVAL_STEP * LOG_STEP step, for example if eval_step = 10 and log_step = 2, so it will print every 20th step
 
         _cfg.OUTPUT_DIR = "test_data_loader"  # folder inside checkpoints
 
@@ -75,7 +75,7 @@ class Config(object):
         _cfg.DATA.FRANKIE = CN()
         _cfg.DATA.FRANKIE.N = 1000
         _cfg.DATA.FRANKIE.NOISE = 0.1
-        _cfg.DATA.FRANKIE.P = 2
+        _cfg.DATA.FRANKIE.P = 10
 
         # Settings for MNIST data
         _cfg.DATA.MNIST = CN()

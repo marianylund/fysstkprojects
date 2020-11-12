@@ -49,7 +49,8 @@ def data_path(dat_id, DATA_ID = "DataFiles/"):
     return os.path.join(DATA_ID, dat_id)
 
 def save_figure(fig_id, FIGURE_ID = "Results/FigureFiles"):
-    plt.savefig(image_path(fig_id, FIGURE_ID) + ".png", format='png', bbox_inches = 'tight')
+    new_fid_id = fig_id.replace(",", "").replace(" ", "").replace("=", "")
+    plt.savefig(image_path(new_fid_id, FIGURE_ID) + ".png", format='png', bbox_inches = 'tight')
 
 def FrankeFunction(x,y, noise_strength = 0.0):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -189,18 +190,19 @@ def plot_values_with_two_y_axis(steps, values_to_plot_y1, values_to_plot_y2, tit
 
     info_str, title_info = parse_info_for_plot(info_to_add)
     
+    plt.title(title, loc='left', fontsize=12, fontweight=0)
+
     if info_str != "":
-        fig.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
+        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
 
     plt.xscale(xscale)
-    fig.tight_layout() 
+    plt.tight_layout() 
     if save_fig:
-        save_figure(title + title_info)
+        save_figure(title) #+ title_info)
+        plt.cla()
     else:
         plt.show()
         print(info_str)
-
-    plt.cla()
 
 def plot_bias_variance_analysis(polydegree, values_to_plot, title = "BiasVarTradeoff",  xlabel = "Polynomial Degree", ylabel = "Prediction Error", info_to_add = {}, xscale = "linear",  save_fig = False):
     plt.style.use('seaborn-darkgrid')

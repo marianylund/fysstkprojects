@@ -3,9 +3,30 @@ import seaborn as sb
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+from math import floor, log10
+from time import time
+from nnreg.config import Config
+from nnreg.dataloader import DataLoader
 
-from RegLib.HelperFunctions import save_figure, plot_values_with_two_y_axis
+from RegLib.HelperFunctions import get_best_dict, save_figure, plot_values_with_two_y_axis, parse_info_for_plot
+from RegLib.load_save_data import write_json
+from sklearn.model_selection import ParameterGrid
 from matplotlib.patches import Rectangle
+
+from yacs.config import CfgNode as CN
+from os import system
+
+def save_terminal_history(file_name:str):
+    command = f"doskey /HISTORY > {file_name}.txt"
+    system(command)
+    print(f"Terminal was saved to {file_name}.txt")
+
+def roundFirst(x:float) -> float:
+    if x == 0:
+        return x
+    
+    mul = pow(10, floor(log10(abs(x))))
+    return round(x/mul)*mul
 
 def get_min_value(results_to_get_min_from, value:str):
     min_ind = get_min_value_index(results_to_get_min_from, value)
@@ -19,6 +40,15 @@ def get_list(results_to_get_from, value:str):
     evals = map(lambda x: x[value], results_to_get_from)
     return list(evals)
 
+def get_results_where(results_to_get_from, value:str, value_equals):
+    evals = filter(lambda x: x if x[value] == value_equals else None, results_to_get_from)
+    return list(evals)
+
+def get_paths_of_results_where(results_to_get_from, value:str, value_equals):
+    evals = filter(lambda x: x if x[value] == value_equals else None, results_to_get_from)
+    new_evals = map(lambda x: Path(x["Name"]), evals)
+    return list(new_evals)
+
 def get_list_of_tuples(results_to_get_from, value1:str, value2:str):
     evals = map(lambda x: (x[value1], x[value2]), results_to_get_from)
     return list(evals)
@@ -28,14 +58,13 @@ def replace_if_bigger(list_with_val, max_val, replace_with = None):
 
 def unpack(res, replace_val_bigger = 0.026203, replace_with = None):
     evals = replace_if_bigger(get_list(res, "Eval"), replace_val_bigger, replace_with)
-    print("Max value: ", max(filter(lambda v: v is not None, evals)))
     tuples_data = get_list_of_tuples(res, "batch_size", "LR")
     index = pd.MultiIndex.from_tuples(tuples_data)
     s_results = pd.Series(evals, index=index)
     s_results = s_results.unstack(level=-1)
     return s_results
 
-def show_heatmap(data, title, xlabel, ylabel, patch_placement = None, show_bar = True, save_fig = False):
+def show_heatmap(data, title, xlabel, ylabel, info_to_add = {}, patch_placement = None, show_bar = True, save_fig = False):
     cmap = sb.diverging_palette(0, 230, 90, 60, as_cmap=True)
     fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -51,15 +80,19 @@ def show_heatmap(data, title, xlabel, ylabel, patch_placement = None, show_bar =
     t -= 0.5 # Subtract 0.5 from the top
     plt.ylim(b, t) # update the ylim(bottom, top) values
     plt.title(title, loc='left', fontsize=12, fontweight=0)
+    
+    info_str, title_info = parse_info_for_plot(info_to_add)
+    
+    if info_str != "":
+        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
 
     if save_fig:
-        save_figure(title)
+        save_figure(title + title_info)
+        plt.cla()
     else: 
         plt.show()
 
-    plt.show()
-
-def plot_lr_tran_val(best_data_dict, info_to_add = {}, ylimit = None, save_fig = False):
+def plot_lr_tran_val(best_data_dict, info_to_add = {}, title = "SGD", ylimit = None, save_fig = False):
     values_to_plot = {
         "Train_mse": list(best_data_dict["Train_eval"].values()),
         "Val_mse": list(best_data_dict["Val_eval"].values()),
@@ -67,5 +100,57 @@ def plot_lr_tran_val(best_data_dict, info_to_add = {}, ylimit = None, save_fig =
     }
     y2 = { "Learning_rate": list(best_data_dict["Learning_rate"].values())}
 
-    steps = list(best_data_dict["Train_eval"].keys())
-    plot_values_with_two_y_axis(steps, values_to_plot, y2, y1_label = "Error", title = "SGD", info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
+    steps = list(map(int, best_data_dict["Train_eval"].keys()))
+    plot_values_with_two_y_axis(steps, values_to_plot, y2, y1_label = "Error", title = title, info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
+
+def param_search(configs:CN, output_dir:Path, param_grid:dict, train, test):
+
+    start_time = time()
+    param_grid = ParameterGrid(param_grid)
+    total_combinations = len(param_grid)
+    results = np.zeros(total_combinations)
+    times = np.zeros((total_combinations, 2)) # min, sec
+    print("Total combinations: ", total_combinations)
+
+    for i in range(total_combinations):
+        val = param_grid[i]
+        param = list(sum(val.items(), ())) # magic that flattens list of tuples
+
+        name = "".join([str(i) for i in val.values()]).replace(".", "")
+        print("Checking: ", param, " name: ", name)
+        new_output_dir = output_dir.joinpath(name)
+
+        ind_of_output = configs.index("OUTPUT_DIR")
+        configs[ind_of_output + 1] = configs[ind_of_output] + "\\" + name
+
+        new_cfg = Config(config_override = configs + param)
+
+        data_loader = DataLoader(new_cfg)
+        train(new_cfg, data_loader, new_output_dir)
+        best_data_dict = get_best_dict(new_output_dir)
+        results[i] = best_data_dict["Test_eval"]
+        times[i] = best_data_dict["Proccess_time"]
+        test(new_cfg, data_loader, best_data_dict)
+
+        print(f"\n{i + 1}/{total_combinations}. Time passed: {divmod(time() - start_time, 60)}\n")
+        
+    # Evaluate
+    new_cfg = Config(config_override = configs)
+    best_eval_i = 0
+    if new_cfg.MODEL.EVAL_FUNC == "mse":
+        best_eval_i = np.argmin(results)
+    else:
+        best_eval_i = np.argmax(results)
+
+    results_dict = {
+        "best_index":  best_eval_i,
+        "best_eval": results[best_eval_i],
+        "best_param": param_grid[best_eval_i],
+        "best_time": times[best_eval_i],
+        "param" : param_grid,
+        "results": results,
+        "times": times
+    }
+    write_json(results_dict, output_dir.joinpath("param_search_results.json"))
+    print("Best eval: ", results[best_eval_i], " with param: ", param_grid[best_eval_i], ", time: ", times[best_eval_i])
+    
