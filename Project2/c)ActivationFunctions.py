@@ -6,17 +6,19 @@ from nnreg.dataloader import DataLoader
 from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
 from nnreg.config import Config
 from PROJECT_SETUP import ROJECT_ROOT_DIR
-from RegLib.load_save_data import load_best_checkpoint, write_json
-from nnreg.analysis_fun import param_search
+from RegLib.load_save_data import load_best_checkpoint, write_json, get_previous_checkpoints, load_data_as_dict
+from nnreg.analysis_fun import show_heatmap, get_min_value, unpack, get_paths_of_results_where, plot_values_with_steps_and_info, param_search, train_save_configs, plot_lr_tran_val
 
-import numpy as np
 from sklearn.model_selection import ParameterGrid
 # For testing:
 from sklearn.neural_network import MLPRegressor
 
-def train(cfg, data: DataLoader, output_dir):
-    cfg.dump(output_dir.joinpath("multilayer_model.yaml"))
-    return Trainer().train_and_test(cfg = cfg, data_loader = data, checkpoints_path = output_dir)
+# For Analysis:
+from math import inf, isnan
+import seaborn as sb
+import pandas as pd
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Compare to sklearn, is there a better function to compare to?:
 def test(cfg, data: DataLoader, best_data_dict):
@@ -29,17 +31,6 @@ def test(cfg, data: DataLoader, best_data_dict):
 
     print("sklearn: R2 : % .4f, MSE : % .4f" % (Trainer.R2(data.y_test.ravel(), regr_test_pred), Trainer.MSE(data.y_test.ravel(), regr_test_pred))) 
     print("Ours: R2 : % .4f, MSE : % .4f" % (best_data_dict["Test_r2"], best_data_dict["Test_eval"])) 
-
-def plot(best_data_dict):
-    values_to_plot = {
-        "Train_mse": list(best_data_dict["Train_eval"].values()),
-        "Val_mse": list(best_data_dict["Val_eval"].values()),
-        #"Train_r2": list(best_data_dict["Train_r2"].values()),
-    }
-    y2 = { "Learning_rate": list(best_data_dict["Learning_rate"].values())}
-
-    steps = list(map(int, best_data_dict["Train_eval"].keys()))
-    plot_values_with_two_y_axis(steps, values_to_plot, y2, y1_label = "Error", title = "nnreg", save_fig = False)
 
 
 config_override = [
@@ -64,10 +55,10 @@ output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
 
 # data_loader = DataLoader(cfg)
-# train(cfg, data_loader, output_dir)
+# train_save_configs(cfg, data_loader, output_dir)
 # best_data_dict = load_best_checkpoint(output_dir)
 # test(cfg, data_loader, best_data_dict)
-# plot(best_data_dict)
+# plot_lr_tran_val(best_data_dict)
 
 
 # Test diff activation functions
@@ -77,7 +68,7 @@ param_grid = {
     "MODEL.ACTIVATION_FUNCTIONS": [["sigmoid", "identity"], ["tanh", "identity"], ["relu", "identity"]],
 }
 
-param_search(config_override, output_dir, param_grid, train, test)
+#param_search(config_override, output_dir, param_grid, train, test)
 
 param_grid = {
     'MODEL.WEIGHT_INIT': ['random', 'he', 'xavier', 'zeros'], 
@@ -85,4 +76,113 @@ param_grid = {
     "MODEL.LEAKY_SLOPE": [-0.1, 0.1] # Maybe 0.01 is better?
 }
 
-param_search(config_override, output_dir, param_grid, train, test)
+#param_search(config_override, output_dir, param_grid, train, test)
+
+
+# Analysis:
+
+def get_all_results_for_weight_init(path:Path, leaky = False):
+    weight_inits = ['random', 'he', 'xavier', 'zeros']
+    all_dir = [x for x in path.iterdir() if x.is_dir()]
+    results = []
+
+    for i in range(len(all_dir)):
+        d = all_dir[i]
+        cfg = Config(config_file = Path(d).joinpath("multilayer_model.yaml"))
+        if (leaky and cfg.MODEL.ACTIVATION_FUNCTIONS[0] == "leaky_relu") or (not leaky and cfg.MODEL.ACTIVATION_FUNCTIONS[0] != "leaky_relu"):
+            best = load_best_checkpoint(d)
+            last_ckp = get_previous_checkpoints(d)[0]
+            last = load_data_as_dict(Path(d).joinpath(last_ckp))
+            new_val = list(last["Val_eval"].values())
+            new_steps = list(map(int, last["Val_eval"].keys()))
+            results.append({"WEIGHT_INIT": cfg.MODEL.WEIGHT_INIT, "ACTIVATION": cfg.MODEL.ACTIVATION_FUNCTIONS[0], "LEAKY_SLOPE": cfg.MODEL.LEAKY_SLOPE, "Eval": best["Test_eval"],"Time": best["Proccess_time"], "Step": best["Step"], "Val_eval": new_val, "Val_steps": new_steps, "Name": d})
+
+    return results
+
+
+def analyse_results(results, values_to_analyse = ("LR_DECAY", "LR"), round_up_to: float = 1, save_fig = False):
+    min_val = get_min_value(results, "Eval") # MAX WHEN ACC AND MIN WHEN MSE
+    print("Best val: ", min_val)
+    best_checkpoint = load_best_checkpoint(min_val["Name"])
+   
+    cfg = Config(config_file = Path(min_val["Name"], "multilayer_model.yaml"))
+    p = str(cfg.MODEL.WEIGHT_INIT)
+
+    time_for_best_run = f'{min_val["Time"][0]:.0f} min {min_val["Time"][1]:.0f}'
+    best_test_eval = f'{min_val["Eval"]:.5f}'
+    
+    # HEAT_MAP
+    info_to_add = {}
+    s_results = unpack(results, values_to_unpack_on = values_to_analyse, replace_val_bigger = inf)
+    position_index = s_results.index.get_loc(min_val[values_to_analyse[0]])
+    position_column = s_results.columns.get_loc(min_val[values_to_analyse[1]])
+
+    show_heatmap(s_results, info_to_add = info_to_add, patch_placement= (position_column, position_index), title = f"Franke NN", xlabel = values_to_analyse[1], ylabel = values_to_analyse[0], show_bar = True, save_fig = save_fig)
+
+    new_info = f'test score={best_test_eval}, time: {time_for_best_run}'
+    # PLOTS
+    info_to_add = {
+        "Results: ": new_info,
+        "File name: ": str(min_val["Name"]).replace("\\", "_"),
+    }
+    print(info_to_add)
+    #plot_lr_tran_val(best_checkpoint, y1_label = "Error", title = f'Best Run Weight init = {p}', info_to_add = info_to_add, save_fig = save_fig)
+
+path_to_results = Path("Results", "SimpleNN")
+
+
+
+all_results_with_leaky = get_all_results_for_weight_init(path_to_results, leaky=True)
+#analyse_results(all_results_with_leaky, values_to_analyse = ("LEAKY_SLOPE", "WEIGHT_INIT"))
+
+print("Loaded")
+def analyse_without_leaky():
+    all_results_without_leaky = get_all_results_for_weight_init(path_to_results)
+    analyse_results(all_results_without_leaky, values_to_analyse = ("ACTIVATION", "WEIGHT_INIT"), save_fig = True)
+    values_to_plot = {}
+    steps_to_plot = {}
+    clean_of_exploding = True
+    for result in all_results_without_leaky:
+        new_val = result["Val_eval"]
+        weight_init = result["WEIGHT_INIT"]
+        act = result["ACTIVATION"]
+        if(not clean_of_exploding or (new_val[-1] != inf and not isnan(new_val[-1]))):
+            new_key = f"{weight_init}_{act}"
+            values_to_plot[new_key] = new_val
+            steps_to_plot[new_key] = result["Val_steps"]
+
+    info_to_add = {}
+    ylimit = (0.01, 0.04) #
+    xlimit = None #(0, 50000) #
+    save_fig = False
+
+    #test(cfg, data_loader, best_checkpoint_10_5)
+    #plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "Weight Init and Activations on Franke", xlimit = xlimit, ylabel = "Error",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
+
+
+def analyse_with_leaky():
+    save_fig = True
+    all_results_with_leaky = get_all_results_for_weight_init(path_to_results, leaky=True)
+    analyse_results(all_results_with_leaky, values_to_analyse = ("LEAKY_SLOPE", "WEIGHT_INIT"), save_fig = save_fig)
+    
+    values_to_plot = {}
+    steps_to_plot = {}
+    clean_of_exploding = True
+    for result in all_results_with_leaky:
+        new_val = result["Val_eval"]
+        weight_init = result["WEIGHT_INIT"]
+        act = result["LEAKY_SLOPE"]
+        if(not clean_of_exploding or (new_val[-1] != inf and not isnan(new_val[-1]))):
+            new_key = f"{weight_init}{act}"
+            values_to_plot[new_key] = new_val
+            steps_to_plot[new_key] = result["Val_steps"]
+
+    info_to_add = {}
+    ylimit = (0.01, 0.04) #
+    xlimit = None #(0, 50000) #
+
+    #test(cfg, data_loader, best_checkpoint_10_5)
+    plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "Weight Init with leaky ReLU on Franke", xlimit = xlimit, ylabel = "Error",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
+
+analyse_without_leaky()
+#analyse_with_leaky()

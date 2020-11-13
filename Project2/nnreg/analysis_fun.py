@@ -3,10 +3,10 @@ import seaborn as sb
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-from math import floor, log10
 from time import time
 from nnreg.config import Config
 from nnreg.dataloader import DataLoader
+from nnreg.trainer import Trainer
 
 from RegLib.HelperFunctions import get_best_dict, save_figure, plot_values_with_two_y_axis, parse_info_for_plot
 from RegLib.load_save_data import write_json
@@ -14,19 +14,6 @@ from sklearn.model_selection import ParameterGrid
 from matplotlib.patches import Rectangle
 
 from yacs.config import CfgNode as CN
-from os import system
-
-def save_terminal_history(file_name:str):
-    command = f"doskey /HISTORY > {file_name}.txt"
-    system(command)
-    print(f"Terminal was saved to {file_name}.txt")
-
-def roundFirst(x:float) -> float:
-    if x == 0:
-        return x
-    
-    mul = pow(10, floor(log10(abs(x))))
-    return round(x/mul)*mul
 
 def get_min_value(results_to_get_min_from, value:str):
     min_ind = get_min_value_index(results_to_get_min_from, value)
@@ -95,10 +82,14 @@ def show_heatmap(data, title, xlabel, ylabel, info_to_add = {}, patch_placement 
         plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=12)
 
     if save_fig:
-        save_figure(title + title_info)
+        save_figure(title)# + title_info)
         plt.cla()
     else: 
         plt.show()
+
+def train_save_configs(cfg, data: DataLoader, output_dir):
+    cfg.dump(output_dir.joinpath("configs.yaml")) #sgd
+    return Trainer().train_and_save(cfg = cfg, data_loader = data, checkpoints_path = output_dir)
 
 def plot_lr_tran_val(best_data_dict, y1_label = "Error", info_to_add = {}, title = "SGD", ylimit = None, save_fig = False):
     values_to_plot = {
@@ -161,4 +152,32 @@ def param_search(configs:CN, output_dir:Path, param_grid:dict, train, test):
     }
     write_json(results_dict, output_dir.joinpath("param_search_results.json"))
     print("Best eval: ", results[best_eval_i], " with param: ", param_grid[best_eval_i], ", time: ", times[best_eval_i])
+
+
+def plot_values_with_steps_and_info(steps, values_to_plot, title = "", xlabel = "Steps", xlimit= None, ylimit= None,  ylabel = "Error", info_to_add = {}, xscale = "linear", save_fig = False):
+    plt.style.use('seaborn-darkgrid')
+    fig, ax = plt.subplots()
+    for key in values_to_plot:
+        ax.plot(steps[key], values_to_plot[key], label=key)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    info_str, title_info = parse_info_for_plot(info_to_add)
     
+    if info_str != "":
+        plt.figtext(0.1, -0.1, info_str, ha="left", fontsize=7)
+
+    if ylimit != None:
+        ax.set_ylim(ylimit[0], ylimit[1])
+    if xlimit != None:
+        ax.set_xlim(xlimit[0], xlimit[1])
+    
+    plt.title(title, loc='left', fontsize=18, fontweight=0)
+    plt.xscale(xscale)
+    plt.tight_layout()
+    if save_fig:
+        save_figure(title + title_info)
+    else:
+        plt.show()
+        print(info_str)

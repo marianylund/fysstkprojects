@@ -75,7 +75,7 @@ class Config(object):
         _cfg.DATA.FRANKIE = CN()
         _cfg.DATA.FRANKIE.N = 1000
         _cfg.DATA.FRANKIE.NOISE = 0.1
-        _cfg.DATA.FRANKIE.P = 10
+        _cfg.DATA.FRANKIE.P = 5
 
         # Settings for MNIST data
         _cfg.DATA.MNIST = CN()
@@ -95,7 +95,7 @@ class Config(object):
         self._cfg.freeze()
 
     
-    def dump(self, file_path: Path):
+    def (self, file_path: Path):
         r"""
         Save config at the specified file path.
         Parameters

@@ -1,62 +1,31 @@
+from PROJECT_SETUP import ROJECT_ROOT_DIR
 from nnreg.model import Model
 from nnreg.trainer import Trainer
 from nnreg.dataloader import DataLoader
-from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
 from nnreg.config import Config
-from nnreg.analysis_fun import param_search
-from PROJECT_SETUP import ROJECT_ROOT_DIR
-from RegLib.load_save_data import load_best_checkpoint, write_json
+from nnreg.analysis_fun import show_heatmap, get_min_value, unpack, get_paths_of_results_where, plot_values_with_steps_and_info, param_search, train_save_configs, plot_lr_tran_val
 
-from pathlib import Path
-import numpy as np
-import sys
-from sklearn.model_selection import ParameterGrid
-from sklearn.metrics import confusion_matrix # TODO: use it
+from RegLib.HelperFunctions import create_frankie_data, create_X, plot_values_with_info,plot_values_with_two_y_axis
+from RegLib.load_save_data import get_previous_checkpoint_as_dict, load_best_checkpoint, write_json, get_previous_checkpoints, load_data_as_dict
+
 # For testing:
 from sklearn.neural_network import MLPClassifier
 
-from os import system
-
-def train(cfg, data: DataLoader, output_dir):
-    cfg.dump(output_dir.joinpath("classification_mnist_model.yaml"))
-    return Trainer().train_and_test(cfg = cfg, data_loader = data, checkpoints_path = output_dir)
+# For Analysis:
+from math import inf, isnan
+import seaborn as sb
+import pandas as pd
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Compare to sklearn, is there a better function to compare to?:
 def test(cfg, data: DataLoader, best_data_dict):
-    # clf = MLPClassifier(hidden_layer_sizes = cfg.MODEL.HIDDEN_LAYERS,
-    #                     activation = "logistic",
-    #                     solver = "sgd",
-    #                     alpha = cfg.OPTIM.L2_REG_LAMBDA,
-    #                     batch_size = cfg.OPTIM.BATCH_SIZE,
-    #                     learning_rate_init = cfg.OPTIM.LR,
-    #                     max_iter = 100,#cfg.OPTIM.NUM_EPOCHS,
-    #                     shuffle = cfg.SHUFFLE,
-    #                     momentum = 0.0,
-    #                     early_stopping=True).fit(data.X_train, data.y_train)
-
     clf = MLPClassifier(hidden_layer_sizes = cfg.MODEL.HIDDEN_LAYERS, verbose = False, validation_fraction=0.2, early_stopping=True).fit(data.X_train, data.y_train)
 
-    #clf_test_pred = clf.predict(data.X_test)
-    #print("Sklearn activation: ", clf.out_activation_)
-    #print("X_shape",  data.X_test.shape)
-    #new_data = data.X_test[0].reshape(-1, 1).T
-    #print("new_data", new_data.shape, data.y_test[0])
-    #print("Sklearn activation: ", clf.predict(new_data))
     print("sklearn accuracy: % .4f" % (clf.score(data.X_test, data.y_test)))
     print("Ours accuracy: % .4f" % (best_data_dict["Test_eval"])) 
 
-def plot(best_data_dict):
-    values_to_plot = {
-        "Train_accuracy": list(best_data_dict["Train_eval"].values()),
-        "Val_mse": list(best_data_dict["Val_eval"].values()),
-    }
-    y2 = { "Learning_rate": list(best_data_dict["Learning_rate"].values())}
-
-    steps = list(map(int, best_data_dict["Train_eval"].keys()))
-    plot_values_with_two_y_axis(steps, values_to_plot, y2, title = "Classification on MNIST", save_fig = False)
-
 # Make sure that the configurations are fit for classification with MNIST
-
 config_override = [
     'OPTIM.BATCH_SIZE', 32,
     'OPTIM.REGULARISATION', "none",
@@ -79,10 +48,10 @@ output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
 
 # data_loader = DataLoader(cfg)
-# nn = train(cfg, data_loader, output_dir)
+# train_save_configs(cfg, data_loader, output_dir)
 # best_data_dict = load_best_checkpoint(output_dir)
 # test(cfg, data_loader, best_data_dict)
-# plot(best_data_dict)
+# plot_lr_tran_val(best_data_dict)
 
 param_grid = {
     #'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
@@ -90,20 +59,86 @@ param_grid = {
     'OPTIM.ALPHA': [0.1, 0.5, 0.9],
 }
 
-
 # change OUTPUT DIR 
 param_grid = {
     "MODEL.HIDDEN_LAYERS": [[200, 100, 20], [10, 200, 10]],
     'MODEL.ACTIVATION_FUNCTIONS': [["tanh", "tanh", "leaky_relu", "softmax"], ["leaky_relu", "leaky_relu", "leaky_relu", "softmax"]],
 }
 
-param_search(config_override, output_dir, param_grid, train, test)
-# Test with different number of layers and nodes
+#param_search(config_override, output_dir, param_grid, train, test)
 
-# If have time test with just 2 classes
+# Regularisation
+
+def plot_l2():
+    path_to_results = Path("Results", "d)MNISTClass_Regularisation")
+    all_dir = [x for x in path_to_results.iterdir() if x.is_dir()]
+    values_to_plot = {}
+    steps_to_plot = {}
+    for i in range(len(all_dir)):
+        d = all_dir[i]
+        cfg = Config(config_file = Path(d).joinpath("classification_mnist_model.yaml"))
+        
+        last = get_previous_checkpoint_as_dict(d)
+
+        new_key = f'Alpha: {cfg.OPTIM.ALPHA}'
+        values_to_plot[new_key] = list(last["Val_eval"].values())
+        steps_to_plot[new_key] = list(map(int, last["Val_eval"].keys()))
+
+    info_to_add = {}
+    ylimit = None #(0.01, 0.04) #
+    xlimit = None #(0, 50000) #
+    save_fig = True
+    plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "L2 Regularisation on MNIST", xlimit = xlimit, ylabel = "Accuracy",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
+
+#plot_l2()
 
 
+def analyse_weight_init_activ(leaky = False):
+    path_to_results = Path("Results", "d)MNISTClass_Weigth_Act")
+    all_dir = [x for x in path_to_results.iterdir() if x.is_dir()]
+    values_to_plot = {}
+    steps_to_plot = {}
+    for i in range(len(all_dir)):
+        d = all_dir[i]
+        cfg = Config(config_file = Path(d).joinpath("classification_mnist_model.yaml"))
+        if (leaky and cfg.MODEL.ACTIVATION_FUNCTIONS[0] == "leaky_relu") or (not leaky and cfg.MODEL.ACTIVATION_FUNCTIONS[0] != "leaky_relu"):
+            last = get_previous_checkpoint_as_dict(d)
 
+            weight_init = cfg.MODEL.WEIGHT_INIT
+            act = cfg.MODEL.ACTIVATION_FUNCTIONS[0]
 
+            new_key = f"{weight_init}_{act}"
+            values_to_plot[new_key] = list(last["Val_eval"].values())
+            steps_to_plot[new_key] = list(map(int, last["Val_eval"].keys()))
 
+    info_to_add = {}
+    ylimit = None #(0.01, 0.04) #
+    xlimit = None #(0, 50000) #
+    save_fig = True
+    plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "MNIST Weight Init and Activations", xlimit = xlimit, ylabel = "Accuracy",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
 
+#analyse_weight_init_activ(leaky = False)
+
+def analyse_nodes_func():
+    path_to_results = Path("Results", "d)MNIST_Num_Of_Nodes")
+    all_dir = [x for x in path_to_results.iterdir() if x.is_dir()]
+    values_to_plot = {}
+    steps_to_plot = {}
+    for i in range(len(all_dir)):
+        d = all_dir[i]
+        cfg = Config(config_file = Path(d).joinpath("classification_mnist_model.yaml"))
+        last = get_previous_checkpoint_as_dict(d)
+        hidden_layers = cfg.MODEL.HIDDEN_LAYERS
+        act = cfg.MODEL.ACTIVATION_FUNCTIONS[:-1]
+
+        new_key = f"{hidden_layers}_{act}"
+        values_to_plot[new_key] = list(last["Val_eval"].values())
+        steps_to_plot[new_key] = list(map(int, last["Val_eval"].keys()))
+
+    info_to_add = {}
+    ylimit = None #(0.01, 0.04) #
+    xlimit = (0, 10000) #
+    save_fig = False
+    plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "MNIST Leaky ReLU", xlimit = xlimit, ylabel = "Accuracy",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
+
+analyse_nodes_func()

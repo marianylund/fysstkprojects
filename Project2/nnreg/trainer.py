@@ -13,9 +13,8 @@ from typing import Callable
 from yacs.config import CfgNode as CN
 
 class Trainer():
-    def train_and_test(self, cfg:CN, data_loader:DataLoader, checkpoints_path:Path = None):
-        print("data_loader.y_train.shape: ", data_loader.y_train.shape)
-        self.model = Model(cfg, data_loader.X_train.shape[1], data_loader.y_train.shape[1]) # here it was X.shape[1]
+    def train_and_save(self, cfg:CN, data_loader:DataLoader, checkpoints_path:Path = None):
+        self.model = Model(cfg, data_loader.X_train.shape[1], data_loader.y_train.shape[1])
         if(checkpoints_path == None):
             checkpoints_path = Path.cwd()
         self.train(cfg, self.model, data_loader.X_train, data_loader.X_test, data_loader.X_val, data_loader.y_train, data_loader.y_test, data_loader.y_val, checkpoints_path)
@@ -174,10 +173,6 @@ class Trainer():
     def get_time(self):
         m, s = divmod(time() - self.start_time, 60)
         return m, s
-
-    @staticmethod  
-    def is_increasing(a):
-        return np.all(np.diff(a) > 0)
 
     @staticmethod
     def learning_schedule(learning_rate:float, decay:float, epoch:float) -> float: 
