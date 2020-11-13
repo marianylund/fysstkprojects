@@ -42,8 +42,8 @@ class Config(object):
         _cfg.SHUFFLE = True
 
         _cfg.OPTIM = CN()
-        _cfg.OPTIM.NUM_EPOCHS = 30
-        _cfg.OPTIM.BATCH_SIZE = 120
+        _cfg.OPTIM.NUM_EPOCHS = 1
+        _cfg.OPTIM.BATCH_SIZE = 32
         _cfg.OPTIM.LR = 1e-3
         _cfg.OPTIM.REGULARISATION = "none" # {none, l1, l2}
         _cfg.OPTIM.ALPHA = 0.9 # 1.0 to turn it off

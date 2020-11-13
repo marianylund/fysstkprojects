@@ -6,7 +6,7 @@ To run that, I would recommend running inside Project2 folder:
 ```
 python -w ignore '.\a)SGD.py'
 ```
-It should start the training with the correct configurations, test the model with sklearn capability and show a plot of the run.
+It should start the training with the correct configurations, test the model with sklearn capability and show a plot of the run. OBS! Number of epochs is set to 1, so it takes less time to test it, but feel free to change it in '.\nnreg\config.py'
 
 In those files you will also find the "Parameter search" and "Analysis of results" those are mostly commented out since they were mostly used to create the graphs and plots that can be found in the paper.
 
@@ -21,7 +21,6 @@ Contains Latex code and pdf of the report
 
 ### nnreg folder
 The main new library, see how it works together in the diagram:<br/>
-
 ![](FysSTK-Project2.png)
 
 ### RegLib folder

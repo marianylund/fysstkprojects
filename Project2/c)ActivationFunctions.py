@@ -36,7 +36,7 @@ def test(cfg, data: DataLoader, best_data_dict):
 config_override = [
     "MODEL.ACTIVATION_FUNCTIONS", ["sigmoid", "identity"], # will need to vary activations in c)
     "MODEL.HIDDEN_LAYERS", [5],  # this will need to vary
-    "MODEL.WEIGHT_INIT", "random", # this will need to vary in c) # {'random', 'he', 'xavier', 'zeros'}
+    "MODEL.WEIGHT_INIT", "xavier", # this will need to vary in c) # {'random', 'he', 'xavier', 'zeros'}
     "MODEL.EVAL_FUNC", "mse",
     "MODEL.COST_FUNCTION", "mse",
     "OPTIM.REGULARISATION", "none",
@@ -46,8 +46,7 @@ config_override = [
     'DATA.FRANKIE.P', 5,
     'DATA.FRANKIE.N', 1000,
     'DATA.FRANKIE.NOISE', 0.1,
-    "OPTIM.NUM_EPOCHS", 8, # To speed up the process
-    "OUTPUT_DIR", "SimpleNN",
+    "OUTPUT_DIR", "Testc)ActFun",
 ]
 
 cfg = Config(config_override = config_override)

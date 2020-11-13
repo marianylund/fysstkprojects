@@ -35,6 +35,8 @@ config_override = [
     "DATA.NAME", "franke",
     'DATA.FRANKIE.N', 1000,
     'DATA.FRANKIE.NOISE', 0.1,
+    'OPTIM.LR', 1e-3, 
+    'OPTIM.BATCH_SIZE', 60,
     "OPTIM.REGULARISATION", "none",
     "OUTPUT_DIR", "Testa)SDG",
 ]
