@@ -20,7 +20,8 @@ python -W ignore '.\test_project2.py'
 Contains Latex code and pdf of the report
 
 ### nnreg folder
-The main new library, see how it works together in the diagram:
+The main new library, see how it works together in the diagram:<br/>
+
 ![](FysSTK-Project2.png)
 
 ### RegLib folder

@@ -28,7 +28,7 @@ Contains some global variables, such as result path, seed for randomisation and 
 Contains Terrain Data
 
 ### RegLib folder
-The main regression module. See the relationship and overview of functions in the diagram:
+The main regression module. See the relationship and overview of functions in the diagram: <br/>
 
 ![](Project1FysSTK.png)
 
