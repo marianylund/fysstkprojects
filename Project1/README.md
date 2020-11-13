@@ -30,7 +30,7 @@ Contains Terrain Data
 ### RegLib folder
 The main regression module. See the relationship and overview of functions in the diagram:
 
-![](Project1/Project1FysSTK.png)
+![](Project1FysSTK.png)
 
 ### Results\FigureFiles folder
 Contains figure and plots, the selected ones are added to the report

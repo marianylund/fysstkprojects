@@ -21,7 +21,7 @@ Contains Latex code and pdf of the report
 
 ### nnreg folder
 The main new library, see how it works together in the diagram:
-![](Project2/FysSTK-Project2.png)
+![](FysSTK-Project2.png)
 
 ### RegLib folder
 Regression module mostly the same as in Project 1.
