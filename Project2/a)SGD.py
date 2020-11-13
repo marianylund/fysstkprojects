@@ -27,45 +27,43 @@ def test(cfg, data: DataLoader, best_data_dict):
     print("Ours: R2 : % .4f, MSE : % .4f" % (best_data_dict["Test_r2"], best_data_dict["Test_eval"])) 
 
 
-# config_override = [
-#     "MODEL.ACTIVATION_FUNCTIONS", ["identity"], # to make it linear reg
-#     "MODEL.HIDDEN_LAYERS", [], # No layers
-#     "MODEL.EVAL_FUNC", "mse",
-#     "MODEL.COST_FUNCTION", "mse",
-#     "DATA.NAME", "franke",
-#     'DATA.FRANKIE.N', 1000,
-#     'DATA.FRANKIE.NOISE', 0.1,
-#     "OPTIM.REGULARISATION", "none",
-#     "OUTPUT_DIR", "SGD_Ridge",
-# ]
+config_override = [
+    "MODEL.ACTIVATION_FUNCTIONS", ["identity"], # to make it linear reg
+    "MODEL.HIDDEN_LAYERS", [], # No layers
+    "MODEL.EVAL_FUNC", "mse",
+    "MODEL.COST_FUNCTION", "mse",
+    "DATA.NAME", "franke",
+    'DATA.FRANKIE.N', 1000,
+    'DATA.FRANKIE.NOISE', 0.1,
+    "OPTIM.REGULARISATION", "none",
+    "OUTPUT_DIR", "Testa)SDG",
+]
 
-# cfg = Config(config_override = config_override)
+cfg = Config(config_override = config_override)
     
-# output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
+output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
-# data_loader = DataLoader(cfg)
-# train(cfg, data_loader, output_dir)
-# best_data_dict = get_best_dict(output_dir)
-# test(cfg, data_loader, best_data_dict)
-# plot_lr_tran_val(best_data_dict, y1_label = "Error", info_to_add = {}, title = "SGD", ylimit = None, save_fig = False)
-
-# prev_check = get_previous_checkpoint_as_dict(output_dir)
-# plot(prev_check)
+data_loader = DataLoader(cfg)
+train_save_configs(cfg, data_loader, output_dir)
+best_data_dict = get_best_dict(output_dir)
+test(cfg, data_loader, best_data_dict)
+plot_lr_tran_val(best_data_dict, y1_label = "Error", info_to_add = {}, title = "SGD", ylimit = None, save_fig = False)
 
 
-# Parameter search:
-# param_grid = {
-#     'OPTIM.LR': [1e-3, 1e-4], 
-#     'OPTIM.BATCH_SIZE': [60], # try with 60 ?
-#     'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
-#     'OPTIM.ALPHA': [0.3, 0.5, 0.9, 1.0],
-#     'DATA.FRANKIE.P': [5],
-#     'OPTIM.REGULARISATION': ["l1"],
-# }
+# ------------------------Parameter search-----------------------------------
+
+param_grid = {
+    'OPTIM.LR': [1e-3, 1e-4], 
+    'OPTIM.BATCH_SIZE': [60], # try with 60 ?
+    'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
+    'OPTIM.ALPHA': [0.3, 0.5, 0.9, 1.0],
+    'DATA.FRANKIE.P': [5],
+    'OPTIM.REGULARISATION': ["l1"],
+}
 
 #param_search(config_override, output_dir, param_grid, train, test)
 
-# Analysis of results:
+# ------------------------Analysis of results-----------------------------------
 
 def get_all_results_for_p(path:Path):
     polynomials = [2, 5, 10, 15]
@@ -126,7 +124,7 @@ def analyse_results(results, round_up_to: float = 1, save_fig = False):
 
 # Concentrating on polynomial 5
 
-path_to_results = Path("Results").joinpath("SGD_Ridge")
+#path_to_results = Path("Results").joinpath("SGD_Ridge")
 def get_ridge_results(path:Path):
     all_dir = [x for x in path.iterdir() if x.is_dir()]
     results = []
@@ -169,5 +167,5 @@ def analyse_ridge_results(results, values_to_unpack_on = ("LR_DECAY", "ALPHA"), 
     #plot_lr_tran_val(best_checkpoint, ylimit = (0.0, 0.1), title = f'Best Run Zoomed In p={p}', info_to_add = info_to_add, save_fig = save_fig)
     #plot_lr_tran_val(best_checkpoint,  ylimit = (0.0, 1.0), title = f'Best Run p={p}', info_to_add = info_to_add, save_fig = save_fig)
 
-ridge_results = get_results_where(get_ridge_results(path_to_results), "LR", 1e-3) 
-analyse_ridge_results(ridge_results, save_fig = True)
+#ridge_results = get_results_where(get_ridge_results(path_to_results), "LR", 1e-3) 
+#analyse_ridge_results(ridge_results, save_fig = True)

@@ -60,8 +60,6 @@ class Config(object):
         _cfg.MODEL.WEIGHT_INIT = "random" # {'random', 'he', 'xavier', 'zeros'}
         _cfg.MODEL.EVAL_FUNC = "acc" # {'acc', 'mse'}
 
-        # scheduler: Callable[[float, float, float], float] = None
-
         # test options
         _cfg.EVAL_STEP = 10 # Evaluate dataset every eval_step, disabled when eval_step < 0, checks for best model every eval step
         _cfg.MODEL_SAVE_STEP = 500 # Save checkpoint every save_step
@@ -95,7 +93,7 @@ class Config(object):
         self._cfg.freeze()
 
     
-    def (self, file_path: Path):
+    def dump(self, file_path: Path):
         r"""
         Save config at the specified file path.
         Parameters

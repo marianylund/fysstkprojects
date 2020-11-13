@@ -46,12 +46,22 @@ config_override = [
 cfg = Config(config_override = config_override)
 output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
+data_loader = DataLoader(cfg)
+train_save_configs(cfg, data_loader, output_dir)
+best_data_dict = load_best_checkpoint(output_dir)
+test(cfg, data_loader, best_data_dict)
+plot_lr_tran_val(best_data_dict)
 
-# data_loader = DataLoader(cfg)
-# train_save_configs(cfg, data_loader, output_dir)
-# best_data_dict = load_best_checkpoint(output_dir)
-# test(cfg, data_loader, best_data_dict)
-# plot_lr_tran_val(best_data_dict)
+
+
+
+
+
+
+
+
+
+# ------------------------Parameter search-----------------------------------
 
 param_grid = {
     #'OPTIM.LR_DECAY': [0.0, 0.6, 0.9],
@@ -67,6 +77,7 @@ param_grid = {
 
 #param_search(config_override, output_dir, param_grid, train, test)
 
+# ------------------------Analysis of results-----------------------------------
 # Regularisation
 
 def plot_l2():
@@ -141,4 +152,4 @@ def analyse_nodes_func():
     save_fig = False
     plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "MNIST Leaky ReLU", xlimit = xlimit, ylabel = "Accuracy",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
 
-analyse_nodes_func()
+#analyse_nodes_func()

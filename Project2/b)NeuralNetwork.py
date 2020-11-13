@@ -32,7 +32,7 @@ def test(cfg, data: DataLoader, best_data_dict):
     print("Ours: R2 : % .4f, MSE : % .4f" % (best_data_dict["Test_r2"], best_data_dict["Test_eval"])) 
 
 hidden_layers = [10, 5]
-new_dir = "SimpleNN\\" + ' '.join([str(elem) for elem in hidden_layers])
+
 config_override = [
     "MODEL.ACTIVATION_FUNCTIONS", ["sigmoid", "sigmoid", "identity"], # will need to vary activations in c)
     "MODEL.HIDDEN_LAYERS", hidden_layers,  # this will need to vary
@@ -46,18 +46,17 @@ config_override = [
     'DATA.FRANKIE.P', 5,
     'DATA.FRANKIE.N', 1000,
     'DATA.FRANKIE.NOISE', 0.1,
-    "OUTPUT_DIR", new_dir,
+    "OUTPUT_DIR", "Testb)NeuralNetwork",
 ]
 
 cfg = Config(config_override = config_override)
-# output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
-
+output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
 data_loader = DataLoader(cfg)
-# train_save_configs(cfg, data_loader, output_dir)
-# best_data_dict = load_best_checkpoint(output_dir)
-# test(cfg, data_loader, best_data_dict)
-# plot_lr_tran_val(best_data_dict)
+train_save_configs(cfg, data_loader, output_dir)
+best_data_dict = load_best_checkpoint(output_dir)
+test(cfg, data_loader, best_data_dict)
+plot_lr_tran_val(best_data_dict)
 
 # Test with different number of hidden layers
 

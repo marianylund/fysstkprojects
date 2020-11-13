@@ -54,14 +54,19 @@ cfg = Config(config_override = config_override)
 output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
 
 
-# data_loader = DataLoader(cfg)
-# train_save_configs(cfg, data_loader, output_dir)
-# best_data_dict = load_best_checkpoint(output_dir)
-# test(cfg, data_loader, best_data_dict)
-# plot_lr_tran_val(best_data_dict)
+data_loader = DataLoader(cfg)
+train_save_configs(cfg, data_loader, output_dir)
+best_data_dict = load_best_checkpoint(output_dir)
+test(cfg, data_loader, best_data_dict)
+plot_lr_tran_val(best_data_dict)
 
 
-# Test diff activation functions
+
+
+
+
+
+# ------------------------Parameter search-----------------------------------
 
 param_grid = {
     'MODEL.WEIGHT_INIT': ['random', 'he', 'xavier', 'zeros'], 
@@ -79,7 +84,7 @@ param_grid = {
 #param_search(config_override, output_dir, param_grid, train, test)
 
 
-# Analysis:
+# ------------------------Analysis of results-----------------------------------
 
 def get_all_results_for_weight_init(path:Path, leaky = False):
     weight_inits = ['random', 'he', 'xavier', 'zeros']
@@ -128,14 +133,13 @@ def analyse_results(results, values_to_analyse = ("LR_DECAY", "LR"), round_up_to
     print(info_to_add)
     #plot_lr_tran_val(best_checkpoint, y1_label = "Error", title = f'Best Run Weight init = {p}', info_to_add = info_to_add, save_fig = save_fig)
 
-path_to_results = Path("Results", "SimpleNN")
+#path_to_results = Path("Results", "SimpleNN")
 
 
 
-all_results_with_leaky = get_all_results_for_weight_init(path_to_results, leaky=True)
+#all_results_with_leaky = get_all_results_for_weight_init(path_to_results, leaky=True)
 #analyse_results(all_results_with_leaky, values_to_analyse = ("LEAKY_SLOPE", "WEIGHT_INIT"))
 
-print("Loaded")
 def analyse_without_leaky():
     all_results_without_leaky = get_all_results_for_weight_init(path_to_results)
     analyse_results(all_results_without_leaky, values_to_analyse = ("ACTIVATION", "WEIGHT_INIT"), save_fig = True)
@@ -184,5 +188,5 @@ def analyse_with_leaky():
     #test(cfg, data_loader, best_checkpoint_10_5)
     plot_values_with_steps_and_info(steps_to_plot, values_to_plot, title = "Weight Init with leaky ReLU on Franke", xlimit = xlimit, ylabel = "Error",  info_to_add = info_to_add, ylimit = ylimit, save_fig = save_fig)
 
-analyse_without_leaky()
+#analyse_without_leaky()
 #analyse_with_leaky()

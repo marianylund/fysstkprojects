@@ -50,9 +50,9 @@ class Model():
         if self.weight_init == "random":
             return weights
         elif self.weight_init == "he":
-            weights *= np.sqrt(2/w_shape[0])
+            weights *= np.sqrt(2/w_shape[0]) # TODO: make it propagate
         elif self.weight_init == "xavier":
-            weights *= np.sqrt(1/w_shape[0])
+            weights *= np.sqrt(1/w_shape[0]) # TODO: make it propagate
         else:
             print("Did not find weight init type: ", self.weight_init)
         return weights

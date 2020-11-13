@@ -9,8 +9,7 @@ from nnreg.dataloader import DataLoader
 from nnreg.config import Config
 
 from nnreg.analysis_fun import plot_values_with_steps_and_info, get_max_value, show_heatmap, unpack, get_paths_of_results_where, plot_values_with_steps_and_info, train_save_configs, plot_lr_tran_val
-from RegLib.load_save_data import get_previous_checkpoint_as_dict, load_best_checkpoint, write_json, get_previous_checkpoints, load_data_as_dict
-
+from RegLib.load_save_data import get_best_dict, get_previous_checkpoint_as_dict, load_best_checkpoint, write_json, get_previous_checkpoints, load_data_as_dict
 
 from time import time
 from sklearn.model_selection import ParameterGrid
@@ -36,6 +35,37 @@ def test(cfg, data: DataLoader, best_data_dict):
 
     print("sklearn test accuracy: % .4f" % (logreg.score(data.X_test, data.y_test)))
     print("Ours test accuracy: % .4f" % (best_data_dict["Test_eval"])) 
+
+# Make sure that the configurations are fit for logisitc regression with MNIST
+config_override = [
+    'OPTIM.REGULARISATION', "l2",
+    'OPTIM.BATCH_SIZE', 32,
+    "MODEL.ACTIVATION_FUNCTIONS", ["softmax"],
+    "MODEL.COST_FUNCTION", "ce",
+    "DATA.NAME", "mnist",
+    "MODEL.HIDDEN_LAYERS", [], # No hidden layers as it is regression
+    "MODEL.EVAL_FUNC", "acc", # Compute accuracy
+    "OUTPUT_DIR", "Teste)LogisticReg"
+    ]
+
+cfg = Config(config_override = config_override)
+output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
+
+data_loader = DataLoader(cfg)
+train_save_configs(cfg, data_loader, output_dir)
+best_data_dict = get_best_dict(output_dir)
+
+data_loader = DataLoader(cfg, one_hot_encode=False)
+test(cfg, data_loader, best_data_dict)
+
+# plot_lr_tran_val(best_data_dict)
+
+
+
+
+
+
+# ------------------------Parameter search-----------------------------------
 
 # A bit different type of param search, without testing every time
 def param_search(configs, output_dir:Path, param_grid:dict, train, test):
@@ -95,31 +125,6 @@ def param_search(configs, output_dir:Path, param_grid:dict, train, test):
 
     print("Best eval: ", results[best_eval_i], " with param: ", param_grid[best_eval_i], ", time: ", times[best_eval_i])
 
-    # Make sure that the configurations are fit for logisitc regression with MNIST
-
-config_override = [
-    'OPTIM.REGULARISATION', "l2",
-    'OPTIM.BATCH_SIZE', 32,
-    "MODEL.ACTIVATION_FUNCTIONS", ["softmax"],
-    "MODEL.COST_FUNCTION", "ce",
-    "DATA.NAME", "mnist",
-    "MODEL.HIDDEN_LAYERS", [], # No hidden layers as it is regression
-    "MODEL.EVAL_FUNC", "acc", # Compute accuracy
-    "OUTPUT_DIR", "e)LogisticReg"
-    ]
-
-# cfg = Config(config_override = config_override)
-# output_dir = ROJECT_ROOT_DIR.joinpath(cfg.OUTPUT_DIR)
-
-# data_loader = DataLoader(cfg)
-# train_save_configs(cfg, data_loader, output_dir)
-# best_data_dict = get_best_dict(output_dir)
-
-# data_loader = DataLoader(cfg, one_hot_encode=False)
-# test(cfg, data_loader, best_data_dict)
-
-# plot_lr_tran_val(best_data_dict)
-
 param_grid = {
     'OPTIM.LR': [1e-3, 1e-2, 1e-1], 
     'MODEL.WEIGHT_INIT': ['random', 'he', 'xavier'],
@@ -129,6 +134,7 @@ param_grid = {
 
 #param_search(config_override, output_dir, param_grid, train, test)
 
+# ------------------------Analysis of results-----------------------------------
 
 def get_all_results_for_weight_init(path:Path):
     weight_inits = ['random', 'he', 'xavier']
@@ -171,12 +177,12 @@ def analyse_results(results, values_to_analyse = ("LR", "ALPHA"), round_up_to: f
 
     show_heatmap(s_results, info_to_add = info_to_add, patch_placement= (position_column, position_index), title = f"Logistic Regression {p}", xlabel = values_to_analyse[1], ylabel = values_to_analyse[0], show_bar = True, save_fig = save_fig)
 
-path_to_results = Path("Results", "e)LogisticReg")
-all_results = get_all_results_for_weight_init(path_to_results)
+# path_to_results = Path("Results", "e)LogisticReg")
+# all_results = get_all_results_for_weight_init(path_to_results)
 
-plt.rcParams['font.size'] = 16 # To set the size of all plots to be bigger
-for res in all_results:
-    analyse_results(all_results[res], save_fig=True)
+# plt.rcParams['font.size'] = 16 # To set the size of all plots to be bigger
+# for res in all_results:
+#     analyse_results(all_results[res], save_fig=True)
 
 
 # values_to_plot = {}
